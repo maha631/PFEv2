@@ -33,16 +33,11 @@ public class TestController {
         Test updated = testService.updateTest(testId, updatedTest);
         return ResponseEntity.ok(updated);
     }
-    @PostMapping("/{testId}/questions")
-//    public ResponseEntity<List<TestQuestion>> addQuestionsToTest(@PathVariable Long testId, @RequestBody List<TestQuestion> testQuestions) {
-//        List<TestQuestion> addedQuestions = testService.addQuestionsToTest(testId, testQuestions);
-//        return ResponseEntity.ok(addedQuestions);
-//    }
-//    @GetMapping("/{testId}/questions")
-//    public ResponseEntity<List<Question>> getQuestionsForTest(@PathVariable Long testId) {
-//        List<Question> questions = testService.getQuestionsForTest(testId);
-//        return ResponseEntity.ok(questions);
-//    }
+    @GetMapping("/public")
+    public List<Test> getAvailablePublicTests() {
+        return testService.getAvailablePublicTests();
+    }
+
     @GetMapping("/{testId}/details")
     public ResponseEntity<Test> getTestDetails(@PathVariable Long testId) {
         Test testDetails = testService.getTestDetails(testId);
@@ -53,11 +48,7 @@ public class TestController {
         Test publishedTest = testService.publishTest(testId, accesRestreint);
         return ResponseEntity.ok(publishedTest);
     }
-//    @PostMapping("/{testId}/invite")
-//    public ResponseEntity<String> inviteDevelopers(@PathVariable Long testId, @RequestBody List<Long> developerIds) {
-//        testService.inviteDevelopers(testId, developerIds);
-//        return ResponseEntity.ok("Invitations envoyées avec succès");
-//    }
+
     @GetMapping("/isCompleted")
     public boolean isTestCompleted(
             @RequestParam Long testId,

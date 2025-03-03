@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -23,6 +24,8 @@ public class TestQuestionService {
 
     public List<Question> getQuestionsForTest(Long testId) {
         List<TestQuestion> testQuestions = testQuestionRepository.findByTestId(testId);
+        testQuestions.sort(Comparator.comparingInt(TestQuestion::getOrdre));
+
         List<Question> questions = new ArrayList<>();
         for (TestQuestion testQuestion : testQuestions) {
             questions.add(testQuestion.getQuestion());
