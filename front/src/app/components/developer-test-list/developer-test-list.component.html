@@ -1,0 +1,23 @@
+<p>developer-test-list works!</p>
+<div class="container mt-4">
+    <h2 class="text-center">Tests disponibles</h2>
+    <div *ngIf="tests.length > 0; else noTests">
+      <div *ngFor="let test of tests" class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">{{ test.titre }}</h5>
+          <p class="card-text">{{ test.description }}</p>
+          <p class="card-text">
+            <strong>Type :</strong> {{ test.type }}
+          </p>
+          <p class="card-text" *ngIf="test.duree">
+            <strong>Durée :</strong> {{ test.duree }} minutes
+          </p>
+          <button class="btn btn-primary">Commencer le test</button>
+        </div>
+      </div>
+    </div>
+    <ng-template #noTests>
+      <p class="text-center">Aucun test disponible pour le moment.</p>
+    </ng-template>
+  </div>
+  
