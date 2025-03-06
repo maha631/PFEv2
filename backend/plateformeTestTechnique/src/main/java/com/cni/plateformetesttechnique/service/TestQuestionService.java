@@ -60,12 +60,11 @@ public class TestQuestionService {
 
         return savedTestQuestions;
     }
+
     public void removeQuestionFromTest(Long testId, Long questionId) {
-        // Vérifier l'existence de l'association Test-Question
         TestQuestion testQuestion = testQuestionRepository.findByTestIdAndQuestionId(testId, questionId)
                 .orElseThrow(() -> new RuntimeException("Association Test-Question non trouvée"));
 
-        // Supprimer l'association sans supprimer la question elle-même
         testQuestionRepository.delete(testQuestion);
     }
 
@@ -73,7 +72,6 @@ public class TestQuestionService {
         this.testQuestionRepository = testQuestionRepository;
     }
 
-    // Méthode pour ajouter une TestQuestion
     public TestQuestion addTestQuestion(TestQuestion testQuestion) {
         return testQuestionRepository.save(testQuestion);
     }

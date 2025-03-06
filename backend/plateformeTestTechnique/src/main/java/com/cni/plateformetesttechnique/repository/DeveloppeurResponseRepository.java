@@ -9,11 +9,14 @@ import com.cni.plateformetesttechnique.model.DeveloppeurResponse;
 import java.util.List;
 
 public interface DeveloppeurResponseRepository extends JpaRepository<DeveloppeurResponse, Long> {
-    public DeveloppeurResponse findByDeveloppeurAndTestAndQuestion(Developpeur developpeur, Test test, Question question);
 
-    // Recherche par testId et developpeurId
+    // Recherche d'une réponse en fonction du développeur, test, et question
+    DeveloppeurResponse findByDeveloppeurAndTestAndQuestion(Developpeur developpeur, Test test, Question question);
+
+    // Recherche des réponses par testId et developpeurId
     List<DeveloppeurResponse> findByTest_IdAndDeveloppeur_Id(Long testId, Long developpeurId);
-    int countByTest_IdAndDeveloppeur_Id(Long testId, Long developpeurId);  // Compter les réponses
+
+    // Compter les réponses par testId et developpeurId
+    int countByTest_IdAndDeveloppeur_Id(Long testId, Long developpeurId);
 
 }
-
