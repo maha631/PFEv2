@@ -1,4 +1,4 @@
-package com.cni.plateformetesttechnique.request;
+package com.cni.plateformetesttechnique.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

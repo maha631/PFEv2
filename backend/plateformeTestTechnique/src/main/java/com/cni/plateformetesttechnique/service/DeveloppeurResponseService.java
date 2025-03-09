@@ -1,4 +1,5 @@
 package com.cni.plateformetesttechnique.service;
+import com.cni.plateformetesttechnique.service.ScoreService;
 
 import com.cni.plateformetesttechnique.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,101 +27,122 @@ public class DeveloppeurResponseService {
 
     @Autowired
     private AnswerOptionRepository answerOptionRepository;
-//    public void enregistrerReponse(Long testId, Long questionId, List<Long> selectedOptionIds, Long developpeurId) {
-//        // Récupérer le développeur
-//        Developpeur developpeur = developpeurRepository.findById(developpeurId)
-//                .orElseThrow(() -> new RuntimeException("Développeur non trouvé avec ID: " + developpeurId));
+    @Autowired
+
+    private ScoreService scoreService;
+
+    public Double enregistrerReponse(Long testId, Long questionId, List<Long> selectedOptionIds, Long developpeurId) {
+        // Récupérer le développeur
+        Developpeur developpeur = developpeurRepository.findById(developpeurId)
+                .orElseThrow(() -> new RuntimeException("Développeur non trouvé avec ID: " + developpeurId));
+
+        // Récupérer le test et la question
+        Test test = testRepository.findById(testId)
+                .orElseThrow(() -> new RuntimeException("Test non trouvé avec ID: " + testId));
+
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question non trouvée avec ID: " + questionId));
+
+        // Vérifier que la question appartient bien au test
+        boolean questionInTest = test.getTestQuestions().stream()
+                .anyMatch(tq -> tq.getQuestion().getId().equals(questionId));
+
+        if (!questionInTest) {
+            throw new RuntimeException("Cette question n'appartient pas au test spécifié.");
+        }
+
+        // Récupérer les options sélectionnées
+        List<AnswerOption> selectedOptions = answerOptionRepository.findAllByIdIn(selectedOptionIds);
+
+        // Vérifier que toutes les options sélectionnées appartiennent bien à la question
+        boolean allOptionsBelongToQuestion = selectedOptions.stream()
+                .allMatch(option -> option.getQuestion().getId().equals(questionId));
+
+        if (!allOptionsBelongToQuestion) {
+            throw new RuntimeException("Certaines options sélectionnées n'appartiennent pas à cette question.");
+        }
+
+        // Vérifier si toutes les options sélectionnées sont correctes
+        boolean isCorrect = selectedOptions.stream().allMatch(AnswerOption::getIsCorrect);
+
+        // Vérifier si une réponse existe déjà pour ce développeur, test et question
+        DeveloppeurResponse existingResponse = developpeurResponseRepository.findByDeveloppeurAndTestAndQuestion(developpeur, test, question);
+
+        if (existingResponse != null) {
+            // Mise à jour de la réponse existante
+            existingResponse.setSelectedAnswerOptions(selectedOptions);
+            existingResponse.setIsCorrect(isCorrect);
+            developpeurResponseRepository.save(existingResponse);
+        } else {
+            // Sauvegarde d'une nouvelle réponse
+            DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(test, question, selectedOptions, isCorrect, developpeur);
+            developpeurResponseRepository.save(developpeurResponse);
+        }
+
+        // Vérifier si c'était la dernière question du test
+        List<DeveloppeurResponse> responses = developpeurResponseRepository.findByTest_IdAndDeveloppeur_Id(testId, developpeurId);
+        int totalQuestions = test.getTestQuestions().size();
+
+        if (responses.size() == totalQuestions) {
+            // Si toutes les questions ont été répondues, calculer le score
+            return scoreService.calculerScore(testId, developpeurId);
+        }
+
+        return null; // Si ce n'était pas la dernière question, ne pas encore calculer le score
+    }
+
+//public void enregistrerReponse(Long testId, Long questionId, List<Long> selectedOptionIds, Long developpeurId) {
+//    // Récupérer le développeur
+//    Developpeur developpeur = developpeurRepository.findById(developpeurId)
+//            .orElseThrow(() -> new RuntimeException("Développeur non trouvé avec ID: " + developpeurId));
 //
-//        // Récupérer le test et la question
-//        Test test = testRepository.findById(testId)
-//                .orElseThrow(() -> new RuntimeException("Test non trouvé avec ID: " + testId));
+//    // Récupérer le test et la question
+//    Test test = testRepository.findById(testId)
+//            .orElseThrow(() -> new RuntimeException("Test non trouvé avec ID: " + testId));
 //
-//        Question question = questionRepository.findById(questionId)
-//                .orElseThrow(() -> new RuntimeException("Question non trouvée avec ID: " + questionId));
+//    Question question = questionRepository.findById(questionId)
+//            .orElseThrow(() -> new RuntimeException("Question non trouvée avec ID: " + questionId));
 //
-//        // Vérifier que la question appartient bien au test
-//        // Vérifier que la question appartient bien au test
-//        boolean questionInTest = test.getTestQuestions().stream()
-//                .anyMatch(tq -> tq.getQuestion().getId().equals(questionId));
+//    // Vérifier que la question appartient bien au test
+//    boolean questionInTest = test.getTestQuestions().stream()
+//            .anyMatch(tq -> tq.getQuestion().getId().equals(questionId));
 //
-//        if (!questionInTest) {
-//            throw new RuntimeException("Cette question n'appartient pas au test spécifié.");
-//        }
+//    if (!questionInTest) {
+//        throw new RuntimeException("Cette question n'appartient pas au test spécifié.");
+//    }
 //
+//    // Récupérer les options sélectionnées
+//    List<AnswerOption> selectedOptions = answerOptionRepository.findAllByIdIn(selectedOptionIds);
 //
-//        // Récupérer les options sélectionnées
-//        List<AnswerOption> selectedOptions = answerOptionRepository.findAllByIdIn(selectedOptionIds);
+//    // Vérifier que toutes les options sélectionnées appartiennent bien à la question
+//    boolean allOptionsBelongToQuestion = selectedOptions.stream()
+//            .allMatch(option -> option.getQuestion().getId().equals(questionId));
 //
-//        // Vérifier que toutes les options sélectionnées appartiennent bien à la question
-//        boolean allOptionsBelongToQuestion = selectedOptions.stream()
-//                .allMatch(option -> option.getQuestion().getId().equals(questionId));
+//    if (!allOptionsBelongToQuestion) {
+//        throw new RuntimeException("Certaines options sélectionnées n'appartiennent pas à cette question.");
+//    }
 //
-//        if (!allOptionsBelongToQuestion) {
-//            throw new RuntimeException("Certaines options sélectionnées n'appartiennent pas à cette question.");
-//        }
+//    // Vérifier si toutes les options sélectionnées sont correctes
+//    boolean isCorrect = selectedOptions.stream().allMatch(AnswerOption::getIsCorrect);
 //
-//        // Vérifier si toutes les options sélectionnées sont correctes
-//        boolean isCorrect = selectedOptions.stream().allMatch(AnswerOption::getIsCorrect);
+//    // Vérifier si une réponse existe déjà pour ce développeur, test et question
+//    DeveloppeurResponse existingResponse = developpeurResponseRepository.findByDeveloppeurAndTestAndQuestion(developpeur, test, question);
 //
-//        // Enregistrer la réponse
+//    if (existingResponse != null) {
+//        // Si une réponse existe, mettre à jour la réponse existante
+//        existingResponse.setSelectedAnswerOptions(selectedOptions);
+//        existingResponse.setIsCorrect(isCorrect);
+//        developpeurResponseRepository.save(existingResponse);
+//
+//        System.out.println("Réponse mise à jour avec succès pour le développeur : " + developpeur.getEmail());
+//    } else {
+//        // Sinon, enregistrer une nouvelle réponse
 //        DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(test, question, selectedOptions, isCorrect, developpeur);
 //        developpeurResponseRepository.save(developpeurResponse);
 //
-//        // Optionnel : Afficher un message de succès
 //        System.out.println("Réponse enregistrée avec succès pour le développeur : " + developpeur.getEmail());
 //    }
-public void enregistrerReponse(Long testId, Long questionId, List<Long> selectedOptionIds, Long developpeurId) {
-    // Récupérer le développeur
-    Developpeur developpeur = developpeurRepository.findById(developpeurId)
-            .orElseThrow(() -> new RuntimeException("Développeur non trouvé avec ID: " + developpeurId));
-
-    // Récupérer le test et la question
-    Test test = testRepository.findById(testId)
-            .orElseThrow(() -> new RuntimeException("Test non trouvé avec ID: " + testId));
-
-    Question question = questionRepository.findById(questionId)
-            .orElseThrow(() -> new RuntimeException("Question non trouvée avec ID: " + questionId));
-
-    // Vérifier que la question appartient bien au test
-    boolean questionInTest = test.getTestQuestions().stream()
-            .anyMatch(tq -> tq.getQuestion().getId().equals(questionId));
-
-    if (!questionInTest) {
-        throw new RuntimeException("Cette question n'appartient pas au test spécifié.");
-    }
-
-    // Récupérer les options sélectionnées
-    List<AnswerOption> selectedOptions = answerOptionRepository.findAllByIdIn(selectedOptionIds);
-
-    // Vérifier que toutes les options sélectionnées appartiennent bien à la question
-    boolean allOptionsBelongToQuestion = selectedOptions.stream()
-            .allMatch(option -> option.getQuestion().getId().equals(questionId));
-
-    if (!allOptionsBelongToQuestion) {
-        throw new RuntimeException("Certaines options sélectionnées n'appartiennent pas à cette question.");
-    }
-
-    // Vérifier si toutes les options sélectionnées sont correctes
-    boolean isCorrect = selectedOptions.stream().allMatch(AnswerOption::getIsCorrect);
-
-    // Vérifier si une réponse existe déjà pour ce développeur, test et question
-    DeveloppeurResponse existingResponse = developpeurResponseRepository.findByDeveloppeurAndTestAndQuestion(developpeur, test, question);
-
-    if (existingResponse != null) {
-        // Si une réponse existe, mettre à jour la réponse existante
-        existingResponse.setSelectedAnswerOptions(selectedOptions);
-        existingResponse.setIsCorrect(isCorrect);
-        developpeurResponseRepository.save(existingResponse);
-
-        System.out.println("Réponse mise à jour avec succès pour le développeur : " + developpeur.getEmail());
-    } else {
-        // Sinon, enregistrer une nouvelle réponse
-        DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(test, question, selectedOptions, isCorrect, developpeur);
-        developpeurResponseRepository.save(developpeurResponse);
-
-        System.out.println("Réponse enregistrée avec succès pour le développeur : " + developpeur.getEmail());
-    }
-}
+//}
 
     @Transactional
     public void supprimerReponses(Long testId, Long developpeurId) {

@@ -8,5 +8,6 @@ import java.util.List;
 
 public interface DeveloppeurTestScoreRepository extends JpaRepository<DeveloppeurTestScore, Long> {
     List<DeveloppeurTestScore> findByDeveloppeur(Developpeur developpeur);
+    DeveloppeurTestScore findByDeveloppeurIdAndTestId(Long developpeurId, Long testId);
 }
 

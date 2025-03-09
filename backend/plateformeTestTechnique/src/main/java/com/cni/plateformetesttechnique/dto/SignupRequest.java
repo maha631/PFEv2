@@ -54,7 +54,7 @@
 //      this.role = role;
 //    }
 //}
-package com.cni.plateformetesttechnique.request;
+package com.cni.plateformetesttechnique.dto;
 
 import java.util.List;
 import java.util.Set;

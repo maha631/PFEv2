@@ -6,7 +6,6 @@ public class ReponseDTO {
     private Long testId;
     private Long questionId;
     private List<Long> selectedOptionIds;
-    private Long developpeurId;
 
     // Getters et Setters
     public Long getTestId() { return testId; }
@@ -18,6 +17,4 @@ public class ReponseDTO {
     public List<Long> getSelectedOptionIds() { return selectedOptionIds; }
     public void setSelectedOptionIds(List<Long> selectedOptionIds) { this.selectedOptionIds = selectedOptionIds; }
 
-    public Long getDeveloppeurId() { return developpeurId; }
-    public void setDeveloppeurId(Long developpeurId) { this.developpeurId = developpeurId; }
-}
+    }

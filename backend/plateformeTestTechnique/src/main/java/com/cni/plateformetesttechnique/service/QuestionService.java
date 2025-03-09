@@ -13,20 +13,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-//public class QuestionService {
-//    @Autowired
-//    private QuestionRepository questionRepository;
-//
-//    public Question ajouterQuestion(Question question) {
-//        // Associer chaque AnswerOption à cette Question
-//        question.getAnswerOptions().forEach(option -> option.setQuestion(question));
-//        return questionRepository.save(question);
-//    }
-//
-//    public List<Question> getAllQuestions() {
-//        return questionRepository.findAll();
-//    }
-//}
 public class QuestionService {
     @Autowired
     private QuestionRepository questionRepository;
@@ -101,33 +87,3 @@ public class QuestionService {
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    public Question addQuestionWithTest(AddQuestionRequest addQuestionRequest, TypeQuestion type, NiveauQuestion niveau) {
-//        // Créer une nouvelle question avec les données de la requête
-//        Question newQuestion = new Question();
-//        newQuestion.setType(type); // Type de la question
-//        newQuestion.setEnonce(addQuestionRequest.getEnonce());
-//        newQuestion.setReponses(addQuestionRequest.getReponses());
-//        newQuestion.setNiveau(niveau); // Niveau de la question
-//
-//        // Assigner les indices des réponses correctes
-//        List<Integer> indicesCorrectes = addQuestionRequest.getIndexReponsesCorrectes();
-//        newQuestion.setIndexReponsesCorrectes(indicesCorrectes);
-//
-//        // Sauvegarder la question dans la base de données
-//        return questionRepository.save(newQuestion);
-//    }
-
