@@ -1,6 +1,8 @@
 package com.cni.plateformetesttechnique.controller;
 
 import com.cni.plateformetesttechnique.dto.ReponseDTO;
+import com.cni.plateformetesttechnique.model.DeveloppeurResponse;
+import com.cni.plateformetesttechnique.repository.DeveloppeurResponseRepository;
 import com.cni.plateformetesttechnique.security.services.UserDetailsImpl;
 import com.cni.plateformetesttechnique.service.DeveloppeurResponseService;
 import com.cni.plateformetesttechnique.repository.UserRepository;
@@ -13,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,7 +24,7 @@ public class DeveloppeurResponseController {
 
     @Autowired
     private DeveloppeurResponseService developpeurResponseService;
-
+    private DeveloppeurResponseRepository developpeurResponseRepository;
     @Autowired
     private UserRepository userRepository;
 
@@ -60,6 +63,20 @@ public class DeveloppeurResponseController {
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+    @GetMapping("/mes-reponses/{testId}")
+    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
+    public ResponseEntity<List<DeveloppeurResponse>> getMesReponses(@PathVariable Long testId) {
+        // Récupérer l'utilisateur connecté
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long developpeurId = userDetails.getId(); // ID du développeur connecté
+
+        // Récupérer les réponses de CE développeur pour CE test
+        List<DeveloppeurResponse> mesReponses = developpeurResponseRepository.findByTest_IdAndDeveloppeur_Id(testId, developpeurId);
+
+        return ResponseEntity.ok(mesReponses);
+    }
+
     @DeleteMapping("/supprimer/{testId}/{developpeurId}")
     public ResponseEntity<String> supprimerReponses(@PathVariable Long testId, @PathVariable Long developpeurId) {
         try {
