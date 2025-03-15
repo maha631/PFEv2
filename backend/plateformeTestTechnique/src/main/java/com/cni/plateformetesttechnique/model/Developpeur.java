@@ -2,6 +2,7 @@ package com.cni.plateformetesttechnique.model;
 
 import java.util.List;
 
+
 import jakarta.persistence.*;
 
 @Entity
@@ -21,6 +22,12 @@ public class Developpeur extends User {
 	private List<DeveloppeurResponse> developpeurResponses;
 	@OneToMany(mappedBy = "developpeur", cascade = CascadeType.ALL)
 	private List<InvitationTest> invitations;
+	
+	
+	@ManyToOne
+    @JoinColumn(name = "chefDeProjet_id")
+    private ChefDeProjet chefDeProjet;
+	
 	public Developpeur() {
 		super(); // ✅ Appelle le constructeur de `User`
 	}
@@ -65,6 +72,31 @@ public class Developpeur extends User {
 		this.developpeurResponses = developpeurResponses;
 		this.invitations = invitations;
 	}
+
+	public List<DeveloppeurResponse> getDeveloppeurResponses() {
+		return developpeurResponses;
+	}
+
+	public void setDeveloppeurResponses(List<DeveloppeurResponse> developpeurResponses) {
+		this.developpeurResponses = developpeurResponses;
+	}
+
+	public List<InvitationTest> getInvitations() {
+		return invitations;
+	}
+
+	public void setInvitations(List<InvitationTest> invitations) {
+		this.invitations = invitations;
+	}
+
+	public ChefDeProjet getChefDeProjet() {
+		return chefDeProjet;
+	}
+
+	public void setChefDeProjet(ChefDeProjet chefDeProjet) {
+		this.chefDeProjet = chefDeProjet;
+	}
+	
 
 	
 

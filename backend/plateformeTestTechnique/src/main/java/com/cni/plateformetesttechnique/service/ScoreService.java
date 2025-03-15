@@ -97,4 +97,24 @@ public class ScoreService {
         // Retourner le score global du développeur
         return developpeur.getScore();
     }
+    
+    
+    public Double calculerScoreChef(Long chefDeProjet_id) {
+        // Récupérer tous les développeurs sous la responsabilité du chef
+        List<Long> developpeurs = developpeurRepository.findDeveloppeursBychefDeProjet_id(chefDeProjet_id);
+
+        if (developpeurs.isEmpty()) {
+            return 0.0; // Aucun développeur, donc score de 0
+        }
+
+        // Calculer la moyenne des scores de ses développeurs
+        double totalScore = developpeurs.stream()
+                .mapToDouble(developpeurId -> getGlobalScore(developpeurId))
+                .average()
+                .orElse(0.0);
+
+        return totalScore;
+    }
 }
+
+

@@ -209,5 +209,30 @@ public ResponseEntity<Map<String, Object>> obtenirScore(
             return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+    
+    
+    @GetMapping("/chef/{chefDeProjet_id}")
+    @PreAuthorize("hasRole('CHEF') or hasRole('ADMIN')")
+    public ResponseEntity<Map<String, Object>> getScoreChef(@PathVariable(name = "chefDeProjet_id") Long chefDeProjet_id) {
+        try {
+            Double score = scoreService.calculerScoreChef(chefDeProjet_id);
+            Map<String, Object> response = new HashMap<>();
+            response.put("status", "success");
+            response.put("score", score);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("status", "error");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    
+ 
+    
+    
+    
+    
 
 }

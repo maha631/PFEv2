@@ -1,8 +1,8 @@
 package com.cni.plateformetesttechnique.model;
 
 import jakarta.persistence.*;
-import lombok.*;
 
+import lombok.*;
 import java.util.List;
 
 @Entity

@@ -105,7 +105,7 @@ public class AuthService {
                         roles.add(roleDeveloppeur);
                         break;
                     case "chefprojet":
-                        Role chefProjetRole = roleRepository.findByName(ERole.ROLE_CHEF_PROJET)
+                        Role chefProjetRole = roleRepository.findByName(ERole.ROLE_CHEF)
                                 .orElseThrow(() -> new RuntimeException("Error: Role not found."));
                         roles.add(chefProjetRole);
                         break;
