@@ -28,6 +28,9 @@ public class Developpeur extends User {
     @JoinColumn(name = "chefDeProjet_id")
     private ChefDeProjet chefDeProjet;
 	
+	private boolean isAssigned = false;  
+
+	
 	public Developpeur() {
 		super(); // ✅ Appelle le constructeur de `User`
 	}
@@ -95,6 +98,14 @@ public class Developpeur extends User {
 
 	public void setChefDeProjet(ChefDeProjet chefDeProjet) {
 		this.chefDeProjet = chefDeProjet;
+	}
+
+	public boolean isAssigned() {
+		return isAssigned;
+	}
+
+	public void setAssigned(boolean isAssigned) {
+		this.isAssigned = isAssigned;
 	}
 	
 

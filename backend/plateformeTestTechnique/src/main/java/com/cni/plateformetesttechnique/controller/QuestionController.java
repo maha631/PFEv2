@@ -143,7 +143,7 @@ public class QuestionController {
     // Supprimer une question par son ID - accessible par ADMIN et ChefProjet uniquement
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
-    public void deleteQuestion(@PathVariable Long id) {
+    public void deleteQuestion(@PathVariable(name="id") Long id) {
         questionService.deleteQuestion(id);
     }
 

@@ -6,12 +6,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.*;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
-import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -30,7 +24,7 @@ import lombok.Data;
 		})
 public class User {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
 	@NotBlank
@@ -48,9 +42,11 @@ public class User {
 	
 	@Column(unique = true, nullable = true)
 	private String activationToken;
+	
 
 	
-	private Boolean active = false; // Par défaut, le compte n'est pas actif
+	private Boolean active = false;
+	
 
 
 	@ManyToMany(fetch = FetchType.LAZY)

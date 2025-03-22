@@ -63,7 +63,7 @@ public class ChefDeProjetService {
         return chefDeProjetRepository.findAll();
     }
     
-    public ChefDeProjet assignerDeveloppeur(Long chefDeProjet_id, Long devId) {
+   /* public ChefDeProjet assignerDeveloppeur(Long chefDeProjet_id, Long devId) {
         Optional<ChefDeProjet> chefOpt = chefDeProjetRepository.findById(chefDeProjet_id);
         Optional<Developpeur> devOpt = developpeurRepository.findById(devId);
 
@@ -79,6 +79,45 @@ public class ChefDeProjetService {
             return chefDeProjetRepository.save(chef);
         } else {
             throw new EntityNotFoundException("Chef de projet ou développeur introuvable.");
+        }
+    }*/
+    public ChefDeProjet assignerDeveloppeur(Long chefDeProjet_id, Long devId) {
+        Optional<ChefDeProjet> chefOpt = chefDeProjetRepository.findById(chefDeProjet_id);
+        Optional<Developpeur> devOpt = developpeurRepository.findById(devId);
+
+        if (chefOpt.isPresent() && devOpt.isPresent()) {
+            ChefDeProjet chef = chefOpt.get();
+            Developpeur developpeur = devOpt.get();
+
+            // Ajout du développeur au chef de projet
+            chef.getDeveloppeurs().add(developpeur);
+            developpeur.setChefDeProjet(chef);
+
+            // ✅ Mise à jour du champ is_assigned
+            developpeur.setAssigned(true);
+
+            // Sauvegarde des changements
+            developpeurRepository.save(developpeur);
+            return chefDeProjetRepository.save(chef);
+        } else {
+            throw new EntityNotFoundException("Chef de projet ou développeur introuvable.");
+        }
+    }
+
+    
+    public boolean existeParUsername(String username) {
+        return chefDeProjetRepository.existsByUsername(username);
+    }
+
+    public boolean existeParEmail(String email) {
+        return chefDeProjetRepository.existsByEmail(email);
+    }
+    public List<Developpeur> getDeveloppeursParChef(Long chefDeProjetId) {
+        Optional<ChefDeProjet> chefOpt = chefDeProjetRepository.findById(chefDeProjetId);
+        if (chefOpt.isPresent()) {
+            return chefOpt.get().getDeveloppeurs();
+        } else {
+            throw new EntityNotFoundException("Chef de projet non trouvé avec l'ID: " + chefDeProjetId);
         }
     }
 

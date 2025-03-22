@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ChefDeProjetRepository extends JpaRepository<ChefDeProjet, Long> {
+	
+	  boolean existsByUsername(String username);
+	    boolean existsByEmail(String email);
 }
