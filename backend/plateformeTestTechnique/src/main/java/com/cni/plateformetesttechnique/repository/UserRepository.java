@@ -22,4 +22,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Optional<User> findByActivationToken(String token);
 	List<User> findByActiveFalse();
 	List<User> findByActiveTrue();
+	
 }

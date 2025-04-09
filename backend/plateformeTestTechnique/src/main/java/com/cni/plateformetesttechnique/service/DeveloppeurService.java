@@ -23,6 +23,7 @@ public class DeveloppeurService {
     public boolean isAssigned(Long devId) {
         return developpeurRepository.existsByIdAndChefDeProjetIsNotNull(devId);
     }
+    
 
 
 

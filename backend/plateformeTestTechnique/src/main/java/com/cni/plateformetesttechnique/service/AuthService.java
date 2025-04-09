@@ -44,6 +44,9 @@ public class AuthService {
 
     @Autowired
     private JavaMailSender mailSender;
+    @Autowired
+    private NotificationService notificationService;
+
 
     public ResponseEntity<?> authenticateUser(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -129,6 +132,11 @@ public class AuthService {
             developpeur.setActive(false);
             user = developpeur;
             sendActivationEmail(developpeur);
+            notificationService.createNotification(
+            	    "Un nouveau développeur s'est inscrit : " + developpeur.getUsername(),
+            	    "/admin/activation-Compte"
+            	);
+
         } else if (strRoles.contains("admin")) {
             Administrateur administrateur = new Administrateur();
             administrateur.setUsername(signUpRequest.getUsername());
