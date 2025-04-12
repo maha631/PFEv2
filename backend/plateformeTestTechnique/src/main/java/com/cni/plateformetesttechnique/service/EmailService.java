@@ -10,17 +10,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
-    
+
     @Value("${app.baseUrl.url:http://localhost:4200}")
     private String baseUrl;
-   
-
 
     public void sendTestPublishedNotification(Test test, Developpeur developer) {
         SimpleMailMessage message = new SimpleMailMessage();
@@ -41,7 +40,7 @@ public class EmailService {
         message.setText("Bonjour " + ",\n\n"
                 + "Vous avez accepté l'invitation au test : " + invitation.getTest().getTitre() + ".\n"
                 + "Vous pouvez y accéder et commencer immédiatement :\n\n"
-                + "http://localhost:4200/tests/" + invitation.getTest().getId() + "/questions\n\n"
+                + "http://localhost:4200/test/" + invitation.getTest().getId() + "/questions\n\n"
                 + "Bonne chance !");
         mailSender.send(message);
     }
@@ -83,25 +82,26 @@ public class EmailService {
     public void sendPasswordResetEmail(String to, String token) {
         try {
             String resetUrl = baseUrl + "/reset-password?token=" + token;
-            
+
             SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom("noreply@votreapp.com");
             message.setTo(to);
             message.setSubject("Réinitialisation de votre mot de passe");
             message.setText("Bonjour,\n\n"
-                + "Pour réinitialiser votre mot de passe, cliquez sur le lien suivant :\n"
-                + resetUrl + "\n\n"
-                + "Ce lien expirera dans 24 heures.\n\n"
-                + "Cordialement,\nL'équipe Technique");
-            
+                    + "Pour réinitialiser votre mot de passe, cliquez sur le lien suivant :\n"
+                    + resetUrl + "\n\n"
+                    + "Ce lien expirera dans 24 heures.\n\n"
+                    + "Cordialement,\nL'équipe Technique");
+
             mailSender.send(message);
             System.out.println("Email de réinitialisation envoyé à: " + to);
-            
+
         } catch (Exception e) {
             System.err.println("Erreur lors de l'envoi de l'email: " + e.getMessage());
             throw new RuntimeException("Échec de l'envoi de l'email", e);
         }
     }
+
 
 
 }

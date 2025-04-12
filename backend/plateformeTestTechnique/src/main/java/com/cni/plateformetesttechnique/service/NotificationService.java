@@ -41,4 +41,3 @@ public class NotificationService {
         notificationRepository.saveAll(unread);
     }
 }
-

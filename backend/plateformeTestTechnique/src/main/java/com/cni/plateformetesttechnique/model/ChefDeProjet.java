@@ -1,5 +1,6 @@
 package com.cni.plateformetesttechnique.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -21,6 +22,8 @@ public class ChefDeProjet extends User {
   
     @JsonIgnore 
     @OneToMany(mappedBy = "chefDeProjet", cascade = CascadeType.ALL)
+    @JsonManagedReference
+
     private List<Developpeur> developpeurs; 
    
 

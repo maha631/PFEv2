@@ -8,4 +8,3 @@ import com.cni.plateformetesttechnique.model.Notification;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByLuFalseOrderByDateNotificationDesc();
 }
-

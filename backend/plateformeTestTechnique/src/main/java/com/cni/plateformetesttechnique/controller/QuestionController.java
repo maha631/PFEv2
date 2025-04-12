@@ -110,7 +110,7 @@ public class QuestionController {
 
     // Ajouter une nouvelle question - accessible par ADMIN et ChefProjet uniquement
     @PostMapping("/add")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public Question ajouterQuestion(@RequestBody Question question) {
         return questionService.ajouterQuestion(question);
     }
@@ -135,21 +135,21 @@ public class QuestionController {
 
     // Mettre à jour une question existante - accessible par ADMIN et ChefProjet uniquement
     @PutMapping("/update/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public Question updateQuestion(@PathVariable Long id, @RequestBody Question questionUpdated) {
         return questionService.updateQuestion(id, questionUpdated);
     }
 
     // Supprimer une question par son ID - accessible par ADMIN et ChefProjet uniquement
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public void deleteQuestion(@PathVariable(name="id") Long id) {
         questionService.deleteQuestion(id);
     }
 
     // Ajouter une question à un test - accessible par ADMIN et ChefProjet uniquement
     @PostMapping("/ajouterAuTest/{testId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public Question ajouterQuestionAuTest(
             @PathVariable Long testId,
             @RequestBody Map<String, Object> requestBody) {

@@ -33,13 +33,17 @@ public class InvitationTestService {
             emailService.sendTestPublishedNotification(test, developer);
         }
     }
+    // Ajout dans InvitationTestService
+
+    public InvitationTest getInvitationDetails(Long invitationId) {
+        return invitationTestRepository.findById(invitationId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation non trouvée"));
+    }
+
     public void inviteDevelopers(Long testId, List<Long> developerIds) {
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test non trouvé"));
 
-        if (!"PUBLIE".equals(test.getStatut())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vous devez publier le test avant d'inviter des développeurs");
-        }
 
         for (Long devId : developerIds) {
             Developpeur developer = developpeurRepository.findById(devId)

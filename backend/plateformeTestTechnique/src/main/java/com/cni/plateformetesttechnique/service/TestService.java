@@ -3,6 +3,8 @@ package com.cni.plateformetesttechnique.service;
 import com.cni.plateformetesttechnique.model.*;
 import com.cni.plateformetesttechnique.repository.*;
 
+import com.cni.plateformetesttechnique.security.services.UserDetailsImpl;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,7 +16,8 @@ import java.util.Optional;
 
 @Service
 public class TestService {
-
+    @Autowired
+    private InvitationTestService invitationTestService;
     @Autowired
     private TestRepository testRepository;
     @Autowired
@@ -29,17 +32,33 @@ public class TestService {
     private InvitationTestRepository invitationTestRepository;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private UserRepository userRepository;
+    @Transactional
+    public Test createTest(Test test, Long createurId) {
+        User createur = userRepository.findById(createurId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-    public Test createTest(Test test) {
+        test.setCreateur(createur);
         test.setStatut("BROUILLON");
         test.setDateCreation(LocalDateTime.now());
         return testRepository.save(test);
+    }
+    public List<Test> getTestsForCurrentUser(UserDetailsImpl userDetails) {
+        if (userDetails.getAuthorities().stream().anyMatch(role -> role.getAuthority().equals("ROLE_ADMIN"))) {
+            return testRepository.findAll(); // Admin voit tout
+        } else if (userDetails.getAuthorities().stream().anyMatch(role -> role.getAuthority().equals("ROLE_CHEF"))) {
+            return testRepository.findByCreateurId(userDetails.getId()); // Chef de projet voit ses tests
+        } else {
+            // Développeur voit uniquement les tests publiés
+            return testRepository.findByStatut("PUBLIE");
+        }
     }
 
     public Optional<Test> getTestById(Long testId) {
         return testRepository.findById(testId);
     }
-
+    @Transactional
     public Test updateTest(Long testId, Test updatedTest) {
         Test existingTest = testRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Test non trouvé"));
@@ -61,7 +80,7 @@ public class TestService {
 
     public List<Test> getAvailablePublicTests() {
         LocalDateTime now = LocalDateTime.now();
-        return testRepository.findByAccesPublicTrueAndStatutAndDateExpirationAfter("PUBLIE", now);
+        return testRepository.findByAccesPublicTrueAndStatutAndDateExpirationIsNullOrDateExpirationAfter("PUBLIE", now);
     }
 
     public Test getTestDetails(Long testId) {
@@ -85,8 +104,7 @@ public class TestService {
             emailService.sendTestPublishedNotification(test, developer);
         }
     }
-
-    public Test publishTest(Long testId, Boolean accesRestreint) {
+    public Test publishTest(Long testId, Boolean accesRestreint, List<Long> developerIds) {
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Test non trouvé"));
 
@@ -104,12 +122,17 @@ public class TestService {
 
         Test publishedTest = testRepository.save(test);
 
-        if (accesRestreint) {
-            sendInvitationEmails(test);
+        if (!accesRestreint) { // Test privé
+            if (developerIds == null || developerIds.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Vous devez fournir au moins un développeur invité pour un test privé.");
+            }
+            invitationTestService.inviteDevelopers(testId, developerIds);
+
         }
 
         return publishedTest;
     }
+
 
     public boolean isTestCompleted(Long testId, Long developpeurId) {
         int totalQuestions = testQuestionRepository.countByTest_Id(testId);

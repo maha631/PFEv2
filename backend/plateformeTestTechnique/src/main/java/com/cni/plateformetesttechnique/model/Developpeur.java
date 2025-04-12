@@ -3,6 +3,8 @@ package com.cni.plateformetesttechnique.model;
 import java.util.List;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -19,14 +21,20 @@ public class Developpeur extends User {
 
     private int experience;
 	@OneToMany(mappedBy = "developpeur")
+	@JsonIgnore
+
 	private List<DeveloppeurResponse> developpeurResponses;
 	@OneToMany(mappedBy = "developpeur", cascade = CascadeType.ALL)
+	@JsonIgnore
+
 	private List<InvitationTest> invitations;
 	
 	
 	@ManyToOne
     @JoinColumn(name = "chefDeProjet_id")
-    private ChefDeProjet chefDeProjet;
+	@JsonBackReference
+
+	private ChefDeProjet chefDeProjet;
 	
 	private boolean isAssigned = false;  
 
@@ -91,7 +99,7 @@ public class Developpeur extends User {
 	public void setInvitations(List<InvitationTest> invitations) {
 		this.invitations = invitations;
 	}
-
+	@JsonIgnore
 	public ChefDeProjet getChefDeProjet() {
 		return chefDeProjet;
 	}

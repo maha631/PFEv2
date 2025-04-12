@@ -47,14 +47,12 @@ public class ChefProjetController {
 
   
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
     public ChefDeProjet getChefById(@PathVariable(name = "id") Long id) {
         return chefDeProjetService.getChefDeProjetById(id);
     }
 
   
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public List<ChefDeProjet> getAllChefs() {
         return chefDeProjetService.getAllChefsDeProjet();
     }
@@ -77,6 +75,8 @@ public class ChefProjetController {
         return ResponseEntity.ok(exists);
     }
     @GetMapping("/{id}/developpeurs")
+    @PreAuthorize("hasRole('ADMIN')")
+
     public ResponseEntity<List<Developpeur>> getDeveloppeursParChef(@PathVariable(name = "id")  Long id) {
         List<Developpeur> developpeurs = chefDeProjetService.getDeveloppeursParChef(id);
         return ResponseEntity.ok(developpeurs);

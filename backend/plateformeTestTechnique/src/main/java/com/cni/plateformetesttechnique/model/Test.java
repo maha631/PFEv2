@@ -9,7 +9,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "tests")
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Test {
@@ -20,6 +19,8 @@ public class Test {
     private String titre;
     private String description;
     private Integer duree; // En minutes (NULL = illimité)
+    private Integer nbQuestions;       // 10
+    private String niveauDifficulte;
 
     @Column(nullable = false)
     private String type; // QCM, Algo, Mixte... TypeTest
@@ -33,12 +34,15 @@ public class Test {
     private LocalDateTime dateCreation;
     private LocalDateTime dateExpiration; // NULL = pas de date limite
 
-
+    @ManyToOne
+    @JoinColumn(name = "createur_id")
+    private User createur;
 
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<TestQuestion> testQuestions;
-
+    @Version
+    private Integer version;
     // Getters et Setters
     public Long getId() {
         return id;
@@ -119,9 +123,36 @@ public class Test {
     public void setDateExpiration(LocalDateTime dateExpiration) {
         this.dateExpiration = dateExpiration;
     }
+    public User getCreateur() {
+        return createur;
+    }
 
+    public void setCreateur(User createur) {
+        this.createur = createur;
+    }
 
+    public Integer getNbQuestions() {
+        return nbQuestions;
+    }
 
+    public void setNbQuestions(Integer nbQuestions) {
+        this.nbQuestions = nbQuestions;
+    }
+
+    public String getNiveauDifficulte() {
+        return niveauDifficulte;
+    }
+
+    public void setNiveauDifficulte(String niveauDifficulte) {
+        this.niveauDifficulte = niveauDifficulte;
+    }
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
 
     public List<TestQuestion> getTestQuestions() {
         return testQuestions;
@@ -130,4 +161,8 @@ public class Test {
     public void setTestQuestions(List<TestQuestion> testQuestions) {
         this.testQuestions = testQuestions;
     }
+    public Test() {
+        this.version = 0; // ⚡ Évite le NullPointerException
+    }
+
 }

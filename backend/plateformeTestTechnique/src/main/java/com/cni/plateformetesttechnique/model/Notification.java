@@ -28,47 +28,44 @@ public class Notification {
         this.dateNotification = LocalDateTime.now();
     }
 
-	public Long getId() {
-		return id;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getMessage() {
-		return message;
-	}
+    public String getMessage() {
+        return message;
+    }
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
+    public void setMessage(String message) {
+        this.message = message;
+    }
 
-	public boolean isLu() {
-		return lu;
-	}
+    public boolean isLu() {
+        return lu;
+    }
 
-	public void setLu(boolean lu) {
-		this.lu = lu;
-	}
+    public void setLu(boolean lu) {
+        this.lu = lu;
+    }
 
-	public LocalDateTime getDateNotification() {
-		return dateNotification;
-	}
+    public LocalDateTime getDateNotification() {
+        return dateNotification;
+    }
 
-	public void setDateNotification(LocalDateTime dateNotification) {
-		this.dateNotification = dateNotification;
-	}
+    public void setDateNotification(LocalDateTime dateNotification) {
+        this.dateNotification = dateNotification;
+    }
 
-	public String getLink() {
-		return link;
-	}
+    public String getLink() {
+        return link;
+    }
 
-	public void setLink(String link) {
-		this.link = link;
-	}
-    
-
-  
+    public void setLink(String link) {
+        this.link = link;
+    }
 }
 

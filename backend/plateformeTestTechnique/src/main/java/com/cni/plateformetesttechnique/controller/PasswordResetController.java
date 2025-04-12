@@ -28,147 +28,126 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 @RestController
 @RequestMapping("/api/auth")
 public class PasswordResetController {
-    
+
     @Autowired
     private UserService userService;
-    
+
     @Autowired
     private EmailService emailService;
-    
+
     @Autowired
     private PasswordResetTokenRepository passwordResetTokenRepository;
-    
+
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    private final Cache<String, Boolean> resendCache = Caffeine.newBuilder()
+            .expireAfterWrite(2, TimeUnit.MINUTES)
+            .build();
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody PasswordResetRequest request) {
         try {
             User user = userService.findUserByEmail(request.getEmail());
             if (user == null) {
-                // Mode production : ne pas révéler que l'email n'existe pas
-            	return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Collections.singletonMap("error", "Vous n'avez pas de compte avec cet email"));            }
-            
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Vous n'avez pas de compte avec cet email"));
+            }
+
             String token = UUID.randomUUID().toString();
             userService.createPasswordResetTokenForUser(user, token);
-            
-            // Envoi de l'email
             emailService.sendPasswordResetEmail(user.getEmail(), token);
-            
-            // POUR LE DÉVELOPPEMENT SEULEMENT - À RETIRER EN PRODUCTION
+
             Map<String, String> response = new HashMap<>();
             response.put("message", "Email envoyé (vérifiez votre boîte mail)");
-            response.put("debug_token", token); // Seulement pour les tests
+            response.put("debug_token", token); // Pour les tests seulement
             response.put("reset_link", "http://localhost:4200/reset-password?token=" + token);
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                .body(Collections.singletonMap("error", "Erreur lors du traitement"));
+                    .body(Collections.singletonMap("error", "Erreur lors du traitement"));
         }
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(@RequestBody PasswordResetDto passwordResetDto) {
         try {
-            // Validation du token
             PasswordResetToken token = passwordResetTokenRepository.findByToken(passwordResetDto.getToken());
             if (token == null) {
                 return ResponseEntity.badRequest().body("Invalid password reset token");
             }
-            
+
             if (token.isExpired()) {
                 passwordResetTokenRepository.delete(token);
                 return ResponseEntity.badRequest().body("Password reset token has expired");
             }
-            
-            // Validation des mots de passe
+
             if (!passwordResetDto.getNewPassword().equals(passwordResetDto.getConfirmPassword())) {
                 return ResponseEntity.badRequest().body("New password and confirmation password do not match");
             }
-            
-            // Validation de la force du mot de passe
+
             if (!isPasswordValid(passwordResetDto.getNewPassword())) {
                 return ResponseEntity.badRequest().body("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter and one number");
             }
-            
-            // Vérifier si le nouveau mot de passe est différent de l'ancien
+
             User user = token.getUser();
             if (passwordEncoder.matches(passwordResetDto.getNewPassword(), user.getPassword())) {
                 return ResponseEntity.badRequest().body("New password must be different from current password");
             }
-            
-            // Réinitialisation du mot de passe
+
             userService.changeUserPassword(user, passwordResetDto.getNewPassword());
             passwordResetTokenRepository.delete(token);
-            
+
             return ResponseEntity.ok("Password has been reset successfully");
-            
+
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("An error occurred while resetting your password");
         }
     }
-    
+
     private boolean isPasswordValid(String password) {
-        // Vérification de la force du mot de passe
-        return password != null 
-               && password.length() >= 8 
-               && password.matches(".*[A-Z].*") 
-               && password.matches(".*[a-z].*") 
-               && password.matches(".*\\d.*");
+        return password != null
+                && password.length() >= 8
+                && password.matches(".*[A-Z].*")
+                && password.matches(".*[a-z].*")
+                && password.matches(".*\\d.*");
     }
-  
-        private final Cache<String, Boolean> resendCache = Caffeine.newBuilder()
-            .expireAfterWrite(2, TimeUnit.MINUTES)
-            .build();
 
-        @PostMapping("/resend-email")
-        public ResponseEntity<?> resendEmail(@RequestBody PasswordResetRequest request) {
-            try {
-                String email = request.getEmail().toLowerCase().trim();
+    @PostMapping("/resend-email")
+    public ResponseEntity<?> resendEmail(@RequestBody PasswordResetRequest request) {
+        try {
+            String email = request.getEmail().toLowerCase().trim();
 
-                // 1. Vérifier le cooldown
-                if (resendCache.getIfPresent(email) != null) {
-                    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                        .body(Collections.singletonMap("error", 
-                            "Veuillez patienter 2 minutes avant de renvoyer"));
-                }
-
-                // 2. Chercher l'utilisateur (sans révéler son existence)
-                User user = userService.findUserByEmail(email);
-                if (user == null) {
-                    return ResponseEntity.ok()
-                        .body(Collections.singletonMap("message", 
-                            "Si cet email existe, un lien a été envoyé"));
-                }
-
-                // 3. Invalider l'ancien token
-                PasswordResetToken existingToken =   passwordResetTokenRepository.findByUser(user);
-                if (existingToken != null) {
-                	  passwordResetTokenRepository.delete(existingToken);
-                }
-
-                // 4. Générer un nouveau token
-                String newToken = UUID.randomUUID().toString();
-                userService.createPasswordResetTokenForUser(user, newToken);
-
-                // 5. Renvoyer l'email
-                emailService.sendPasswordResetEmail(user.getEmail(), newToken);
-
-                // 6. Mettre en cache
-                resendCache.put(email, true);
-
-                return ResponseEntity.ok()
-                    .body(Collections.singletonMap("message", 
-                        "Email de réinitialisation renvoyé"));
-
-            } catch (Exception e) {
-                return ResponseEntity.internalServerError()
-                    .body(Collections.singletonMap("error", 
-                        "Erreur lors du renvoi de l'email"));
+            if (resendCache.getIfPresent(email) != null) {
+                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                        .body(Collections.singletonMap("error", "Veuillez patienter 2 minutes avant de renvoyer"));
             }
+
+            User user = userService.findUserByEmail(email);
+            if (user == null) {
+                return ResponseEntity.ok()
+                        .body(Collections.singletonMap("message", "Si cet email existe, un lien a été envoyé"));
+            }
+
+            PasswordResetToken existingToken = passwordResetTokenRepository.findByUser(user);
+            if (existingToken != null) {
+                passwordResetTokenRepository.delete(existingToken);
+            }
+
+            String newToken = UUID.randomUUID().toString();
+            userService.createPasswordResetTokenForUser(user, newToken);
+            emailService.sendPasswordResetEmail(user.getEmail(), newToken);
+
+            resendCache.put(email, true);
+
+            return ResponseEntity.ok()
+                    .body(Collections.singletonMap("message", "Email de réinitialisation renvoyé"));
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Collections.singletonMap("error", "Erreur lors du renvoi de l'email"));
         }
-   
+    }
 }

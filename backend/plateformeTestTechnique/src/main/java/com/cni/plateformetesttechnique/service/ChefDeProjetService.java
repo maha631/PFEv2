@@ -1,30 +1,97 @@
 package com.cni.plateformetesttechnique.service;
 import com.cni.plateformetesttechnique.model.ChefDeProjet;
 import com.cni.plateformetesttechnique.model.Developpeur;
+import com.cni.plateformetesttechnique.model.ERole;
+import com.cni.plateformetesttechnique.model.Role;
 import com.cni.plateformetesttechnique.repository.ChefDeProjetRepository;
 import com.cni.plateformetesttechnique.repository.DeveloppeurRepository;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.transaction.Transactional;
+import org.apache.commons.lang3.RandomStringUtils;
 
+import com.cni.plateformetesttechnique.repository.RoleRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 
 @Service
 public class ChefDeProjetService {
-
+    @Autowired
+    private JavaMailSender mailSender;
     @Autowired
     private ChefDeProjetRepository chefDeProjetRepository;
     @Autowired
     private DeveloppeurRepository developpeurRepository;
+    @Autowired
+    private RoleRepository roleRepository;
+    @Autowired
+    private PasswordEncoder encoder;
 
-    // Ajouter un Chef de Projet
+
     public ChefDeProjet ajouterChefDeProjet(ChefDeProjet chef) {
-        return chefDeProjetRepository.save(chef);
+        // Vérifier si le rôle CHEF existe
+        Role roleChef = roleRepository.findByName(ERole.ROLE_CHEF)
+                .orElseThrow(() -> new RuntimeException("Error: Role CHEF not found."));
+
+        // Attribuer automatiquement le rôle CHEF
+        Set<Role> roles = new HashSet<>();
+        roles.add(roleChef);
+        chef.setRoles(roles);
+
+        // Générer un mot de passe aléatoire sécurisé
+        String generatedPassword = RandomStringUtils.randomAlphanumeric(10); // 10 caractères
+        System.out.println("Mot de passe généré : " + generatedPassword); // Pour test
+
+        // Crypter le mot de passe avant l'enregistrement
+        chef.setPassword(encoder.encode(generatedPassword));
+        chef.setActive(true);
+        // Sauvegarder le chef de projet
+        ChefDeProjet savedChef = chefDeProjetRepository.save(chef);
+
+        // Envoyer le mot de passe par email (optionnel)
+        sendGeneratedPasswordByEmail(chef.getEmail(),chef.getUsername(), generatedPassword);
+
+        return savedChef;
     }
+    public void sendGeneratedPasswordByEmail(String email, String username, String generatedPassword) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email); // ✅ Email temporaire pour le test
+        message.setSubject("Votre compte Chef de Projet a été créé");
+        message.setText("Bonjour,\n\nVotre compte a été créé avec succès.\n"
+                +"votre username est : "+username+"\n"
+                + "Votre mot de passe temporaire est : " + generatedPassword + "\n"
+                + "Merci de le changer après votre première connexion.\n\n"
+                + "Cordialement,\nL'équipe de gestion");
+
+        mailSender.send(message);
+    }
+
+//    public ChefDeProjet ajouterChefDeProjet(ChefDeProjet chef) {
+//        // Récupérer le rôle Chef à partir de l'énumération ERole
+//        Role roleChef = roleRepository.findByName(ERole.ROLE_CHEF)
+//
+//                .orElseThrow(() -> new RuntimeException("Error: Role CHEF not found."));
+//
+//        // Attribuer automatiquement le rôle Chef au ChefDeProjet
+//        Set<Role> roles = new HashSet<>();
+//        roles.add(roleChef);
+//        chef.setRoles(roles);
+//        chef.setPassword(encoder.encode(chef.getPassword()));
+//
+//        // Sauvegarder le chef de projet dans la base de données
+//        return chefDeProjetRepository.save(chef);
+//
+//    }
 
     public ChefDeProjet modifierChefDeProjet(Long id, ChefDeProjet nouveauChef) {
         Optional<ChefDeProjet> optionalChef = chefDeProjetRepository.findById(id);
@@ -112,6 +179,7 @@ public class ChefDeProjetService {
     public boolean existeParEmail(String email) {
         return chefDeProjetRepository.existsByEmail(email);
     }
+    @JsonIgnore
     public List<Developpeur> getDeveloppeursParChef(Long chefDeProjetId) {
         Optional<ChefDeProjet> chefOpt = chefDeProjetRepository.findById(chefDeProjetId);
         if (chefOpt.isPresent()) {
