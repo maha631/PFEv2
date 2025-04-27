@@ -18,5 +18,6 @@ public interface DeveloppeurResponseRepository extends JpaRepository<Developpeur
 
     // Compter les réponses par testId et developpeurId
     int countByTest_IdAndDeveloppeur_Id(Long testId, Long developpeurId);
+    List<DeveloppeurResponse> findByTestIdAndDeveloppeurId(Long testId, Long developpeurId);
 
 }

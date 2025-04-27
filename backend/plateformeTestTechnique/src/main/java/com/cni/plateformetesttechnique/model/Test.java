@@ -33,6 +33,10 @@ public class Test {
 
     private LocalDateTime dateCreation;
     private LocalDateTime dateExpiration; // NULL = pas de date limite
+    @ElementCollection
+    @CollectionTable(name = "test_technologies", joinColumns = @JoinColumn(name = "test_id"))
+    @Column(name = "technology")
+    private List<String> technologies; // ex: ["Java", "Python"]
 
     @ManyToOne
     @JoinColumn(name = "createur_id")
@@ -44,6 +48,25 @@ public class Test {
     @Version
     private Integer version;
     // Getters et Setters
+    public Test(String titre, String description, int duree, int nbQuestions,
+                String niveauDifficulte, String type, boolean accesPublic,
+                int limiteTentatives, String statut, LocalDateTime dateCreation,
+                LocalDateTime dateExpiration, List<String> technologies, User createur) {
+        this.titre = titre;
+        this.description = description;
+        this.duree = duree;
+        this.nbQuestions = nbQuestions;
+        this.niveauDifficulte = niveauDifficulte;
+        this.type = type;
+        this.accesPublic = accesPublic;
+        this.limiteTentatives = limiteTentatives;
+        this.statut = statut;
+        this.dateCreation = dateCreation;
+        this.dateExpiration = dateExpiration;
+        this.technologies = technologies;
+        this.createur = createur;
+    }
+
     public Long getId() {
         return id;
     }
@@ -129,6 +152,13 @@ public class Test {
 
     public void setCreateur(User createur) {
         this.createur = createur;
+    }
+    public List<String> getTechnologies() {
+        return technologies;
+    }
+
+    public void setTechnologies(List<String> technologies) {
+        this.technologies = technologies;
     }
 
     public Integer getNbQuestions() {

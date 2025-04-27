@@ -60,15 +60,20 @@
 package com.cni.plateformetesttechnique.controller;
 
 import com.cni.plateformetesttechnique.dto.PublishTestRequest;
+import com.cni.plateformetesttechnique.dto.TestGenerationRequest;
+import com.cni.plateformetesttechnique.model.Question;
 import com.cni.plateformetesttechnique.model.Test;
 import com.cni.plateformetesttechnique.security.services.UserDetailsImpl;
 import com.cni.plateformetesttechnique.service.TestService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -86,7 +91,43 @@ public class TestController {
     public List<Test> getAllTests() {
         return testService.getAllTests();
     }
+    @GetMapping("/by-user/{userId}")
+    public ResponseEntity<List<Test>> getTestsByUser(@PathVariable Long userId) {
+        List<Test> tests = testService.getTestsPubliesByUserId(userId);
+        return ResponseEntity.ok(tests);
+    }
+    @GetMapping("/publies/admin")
+    public ResponseEntity<List<Test>> getTestsPubliesDeAdmin() {
+        return ResponseEntity.ok(testService.getTestsPubliesDeAdmin());
+    }
+    @GetMapping("/publies/du-chef")
+    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
 
+    public ResponseEntity<List<Test>> getTestsDuChef() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String emailDev = userDetails.getEmail(); // ou getEmail() selon ton UserDetails
+        List<Test> tests = testService.getTestsPubliesDuChefDuDev(emailDev);
+        return ResponseEntity.ok(tests);
+    }
+
+    @PostMapping("/generate")
+    public Test generateTest(@RequestBody @Valid TestGenerationRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Long userId = userDetails.getId();
+        return testService.createTestFromRequest(request, userId);
+    }
+    @PostMapping("/questions")
+    public ResponseEntity<?> generateQs(@Valid @RequestBody TestGenerationRequest request) {
+        try {
+            // Logic to generate test...
+            List<Question> questions = testService.getQuestionsForAutoGeneration(request);
+            return ResponseEntity.ok(questions);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
     // Créer un test - accessible par ADMIN et ChefProjet uniquement
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")

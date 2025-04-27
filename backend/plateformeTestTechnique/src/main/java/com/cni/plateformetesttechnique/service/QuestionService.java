@@ -1,8 +1,7 @@
 package com.cni.plateformetesttechnique.service;
-import com.cni.plateformetesttechnique.model.Question;
-import com.cni.plateformetesttechnique.model.Test;
-import com.cni.plateformetesttechnique.model.TestQuestion;
-import com.cni.plateformetesttechnique.model.TypeQuestion;
+import com.cni.plateformetesttechnique.dto.AnswerOptionRequest;
+import com.cni.plateformetesttechnique.dto.QuestionRequest;
+import com.cni.plateformetesttechnique.model.*;
 import com.cni.plateformetesttechnique.repository.QuestionRepository;
 import com.cni.plateformetesttechnique.repository.TestQuestionRepository;
 import com.cni.plateformetesttechnique.repository.TestRepository;
@@ -10,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -21,12 +21,60 @@ public class QuestionService {
     @Autowired
     private TestQuestionRepository testQuestionRepository;
 
-    // Ajouter une nouvelle question
-    public Question ajouterQuestion(Question question) {
-        // Associer chaque AnswerOption à cette Question
-        question.getAnswerOptions().forEach(option -> option.setQuestion(question));
-        return questionRepository.save(question);
+    public Question ajouterQuestionDepuisDTO(QuestionRequest request) {
+        if (request.getType() == TypeQuestion.QCM) {
+            MultipleChoiceQuestion mcq = new MultipleChoiceQuestion();
+            mcq.setEnonce(request.getEnonce());
+            mcq.setNiveau(request.getNiveau());
+            mcq.setType(request.getType());
+
+            // Nouveaux attributs
+            mcq.setTechnologie(request.getTechnologie());
+            mcq.setTempsEstime(request.getTempsEstime());
+
+            List<AnswerOption> options = new ArrayList<>();
+            for (AnswerOptionRequest optionReq : request.getAnswerOptions()) {
+                AnswerOption option = new AnswerOption();
+                option.setText(optionReq.getText());
+                option.setIsCorrect(optionReq.getIsCorrect());
+                option.setQuestion(mcq);
+                options.add(option);
+            }
+
+            mcq.setAnswerOptions(options);
+            return questionRepository.save(mcq);
+
+        } else if (request.getType() == TypeQuestion.Code) {
+            CodeQuestion codeQ = new CodeQuestion();
+            codeQ.setEnonce(request.getEnonce());
+            codeQ.setNiveau(request.getNiveau());
+            codeQ.setType(request.getType());
+            codeQ.setLanguage(request.getLanguage());
+
+            // Nouveaux attributs
+            codeQ.setTechnologie(request.getTechnologie());
+            codeQ.setTempsEstime(request.getTempsEstime());
+
+            return questionRepository.save(codeQ);
+        } else {
+            throw new IllegalArgumentException("Type de question non supporté");
+        }
     }
+
+
+
+//    public Question ajouterQuestion(Question question) {
+//        if (question instanceof MultipleChoiceQuestion) {
+//            MultipleChoiceQuestion mcQuestion = (MultipleChoiceQuestion) question;
+//            mcQuestion.getAnswerOptions().forEach(option -> option.setQuestion(mcQuestion));
+//            return questionRepository.save(mcQuestion);
+//        } else if (question instanceof CodeQuestion) {
+//            // Sauvegarde spécifique pour les CodeQuestion
+//            return questionRepository.save((CodeQuestion) question);
+//        } else {
+//            return questionRepository.save(question);
+//        }
+//    }
 
     // Récupérer toutes les questions
     public List<Question> getAllQuestions() {
@@ -39,7 +87,7 @@ public class QuestionService {
                 .orElseThrow(() -> new RuntimeException("Question non trouvée avec ID: " + id));
     }
 
-    // Récupérer des questions par type (exemple: QCM, texte libre, etc.)
+    // Récupérer des questions par type
     public List<Question> getQuestionsByType(TypeQuestion type) {
         return questionRepository.findByType(type);
     }
@@ -51,10 +99,20 @@ public class QuestionService {
         question.setNiveau(questionUpdated.getNiveau());
         question.setType(questionUpdated.getType());
 
-        // Mise à jour des AnswerOptions
-        question.getAnswerOptions().clear();
-        question.getAnswerOptions().addAll(questionUpdated.getAnswerOptions());
-        question.getAnswerOptions().forEach(option -> option.setQuestion(question));
+        if (question instanceof CodeQuestion && questionUpdated instanceof CodeQuestion) {
+            CodeQuestion codeQuestion = (CodeQuestion) question;
+            CodeQuestion updatedCodeQuestion = (CodeQuestion) questionUpdated;
+            codeQuestion.setLanguage(updatedCodeQuestion.getLanguage());
+        }
+
+        // Pour MultipleChoiceQuestion, mise à jour des AnswerOptions
+        if (question instanceof MultipleChoiceQuestion && questionUpdated instanceof MultipleChoiceQuestion) {
+            MultipleChoiceQuestion mcQuestion = (MultipleChoiceQuestion) question;
+            MultipleChoiceQuestion mcUpdatedQuestion = (MultipleChoiceQuestion) questionUpdated;
+            mcQuestion.getAnswerOptions().clear();
+            mcQuestion.getAnswerOptions().addAll(mcUpdatedQuestion.getAnswerOptions());
+            mcQuestion.getAnswerOptions().forEach(option -> option.setQuestion(mcQuestion));
+        }
 
         return questionRepository.save(question);
     }
@@ -64,7 +122,7 @@ public class QuestionService {
         Question question = getQuestionById(id);
         questionRepository.delete(question);
     }
-    public Question ajouterQuestionAuTest(Long testId, Question question, Integer points, Integer ordre) {
+    public Question ajouterQuestionAuTest(Long testId, MultipleChoiceQuestion question, Integer points, Integer ordre) {
         // Récupérer le test
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Test non trouvé avec ID: " + testId));

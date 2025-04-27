@@ -14,9 +14,9 @@ import java.util.Optional;
 public interface DeveloppeurRepository extends JpaRepository<Developpeur, Long> {
 
     // Récupérer un développeur par son email
-    Optional<Developpeur> findByEmail(String email);
     Optional<Developpeur> findById(Long id);
-    
+    @Query("SELECT d FROM Developpeur d WHERE d.email = :email")
+    Optional<Developpeur> findByEmail(@Param("email") String email);
      //List<Long> findDeveloppeursBychefDeProjet_id(Long chefDeProjet_id);
      @Query("SELECT d.id FROM Developpeur d WHERE d.chefDeProjet.id = :chefDeProjet_id")
      List<Long> findDeveloppeursBychefDeProjet_id(@Param("chefDeProjet_id") Long chefDeProjet_id);

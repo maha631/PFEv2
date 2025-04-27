@@ -87,10 +87,8 @@
 //}
 package com.cni.plateformetesttechnique.controller;
 
-import com.cni.plateformetesttechnique.model.AnswerOption;
-import com.cni.plateformetesttechnique.model.NiveauQuestion;
-import com.cni.plateformetesttechnique.model.Question;
-import com.cni.plateformetesttechnique.model.TypeQuestion;
+import com.cni.plateformetesttechnique.dto.QuestionRequest;
+import com.cni.plateformetesttechnique.model.*;
 import com.cni.plateformetesttechnique.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -109,41 +107,42 @@ public class QuestionController {
     private QuestionService questionService;
 
     // Ajouter une nouvelle question - accessible par ADMIN et ChefProjet uniquement
+    // Ajouter une nouvelle question (y compris CodeQuestion)
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
-    public Question ajouterQuestion(@RequestBody Question question) {
-        return questionService.ajouterQuestion(question);
+    public Question ajouterQuestion(@RequestBody QuestionRequest question) {
+        return questionService.ajouterQuestionDepuisDTO(question);
     }
 
-    // Récupérer toutes les questions - accessible à tous
+    // Récupérer toutes les questions
     @GetMapping("/all")
     public List<Question> getAllQuestions() {
         return questionService.getAllQuestions();
     }
 
-    // Récupérer une question par son ID - accessible à tous
+    // Récupérer une question par son ID
     @GetMapping("/{id}")
     public Question getQuestionById(@PathVariable Long id) {
         return questionService.getQuestionById(id);
     }
 
-    // Récupérer des questions par type - accessible à tous
+    // Récupérer des questions par type
     @GetMapping("/type")
     public List<Question> getQuestionsByType(@RequestParam TypeQuestion type) {
         return questionService.getQuestionsByType(type);
     }
 
-    // Mettre à jour une question existante - accessible par ADMIN et ChefProjet uniquement
+    // Mettre à jour une question existante
     @PutMapping("/update/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public Question updateQuestion(@PathVariable Long id, @RequestBody Question questionUpdated) {
         return questionService.updateQuestion(id, questionUpdated);
     }
 
-    // Supprimer une question par son ID - accessible par ADMIN et ChefProjet uniquement
+    // Supprimer une question par son ID
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
-    public void deleteQuestion(@PathVariable(name="id") Long id) {
+    public void deleteQuestion(@PathVariable(name = "id") Long id) {
         questionService.deleteQuestion(id);
     }
 
@@ -154,7 +153,7 @@ public class QuestionController {
             @PathVariable Long testId,
             @RequestBody Map<String, Object> requestBody) {
 
-        Question question = new Question();
+        MultipleChoiceQuestion question = new MultipleChoiceQuestion();
         question.setEnonce((String) requestBody.get("enonce"));
         question.setNiveau(NiveauQuestion.valueOf((String) requestBody.get("niveau")));
         question.setType(TypeQuestion.valueOf((String) requestBody.get("type")));

@@ -1,4 +1,5 @@
 package com.cni.plateformetesttechnique.model;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -14,9 +15,9 @@ public class AnswerOption {
 
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
-    @JsonIgnore
+    @JsonBackReference
 
-    private Question question;
+    private MultipleChoiceQuestion question;
 
     // Constructeur par défaut
     public AnswerOption() {}
@@ -50,7 +51,7 @@ public class AnswerOption {
         return question;
     }
 
-    public void setQuestion(Question question) {
+    public void setQuestion(MultipleChoiceQuestion question) {
         this.question = question;
     }
 }
