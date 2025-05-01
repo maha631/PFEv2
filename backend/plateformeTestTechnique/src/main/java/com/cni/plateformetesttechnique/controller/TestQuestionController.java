@@ -75,7 +75,7 @@ public class TestQuestionController {
     @PostMapping("/add/{testId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
     public ResponseEntity<List<TestQuestion>> addQuestionsToTest(
-            @PathVariable Long testId,
+    	    @PathVariable("testId") Long testId,
             @RequestBody List<TestQuestion> testQuestions) {
         List<TestQuestion> savedTestQuestions = testQuestionService.addQuestionsToTest(testId, testQuestions);
         return ResponseEntity.ok(savedTestQuestions);
@@ -100,7 +100,7 @@ public class TestQuestionController {
 //            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
 //        }
 //    }
-    public ResponseEntity<List<Question>> getQuestionsForTest(@PathVariable Long testId) {
+    public ResponseEntity<List<Question>> getQuestionsForTest( @PathVariable(name = "testId")  Long testId) {
         List<Question> questions = testQuestionService.getQuestionsForTest(testId);
         return ResponseEntity.ok(questions);
     }

@@ -35,6 +35,9 @@ public class Test {
     private LocalDateTime dateExpiration; // NULL = pas de date limite
 
     @ManyToOne
+    private Developpeur developpeur;
+
+    @ManyToOne
     @JoinColumn(name = "createur_id")
     private User createur;
 
@@ -164,5 +167,13 @@ public class Test {
     public Test() {
         this.version = 0; // ⚡ Évite le NullPointerException
     }
+
+	public Developpeur getDeveloppeur() {
+		return developpeur;
+	}
+
+	public void setDeveloppeur(Developpeur developpeur) {
+		this.developpeur = developpeur;
+	}
 
 }

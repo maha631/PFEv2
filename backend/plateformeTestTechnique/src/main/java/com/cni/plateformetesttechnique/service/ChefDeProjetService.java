@@ -36,6 +36,8 @@ public class ChefDeProjetService {
     private RoleRepository roleRepository;
     @Autowired
     private PasswordEncoder encoder;
+    @Autowired
+    private ScoreService scoreService;
 
 
     public ChefDeProjet ajouterChefDeProjet(ChefDeProjet chef) {
@@ -148,7 +150,7 @@ public class ChefDeProjetService {
             throw new EntityNotFoundException("Chef de projet ou développeur introuvable.");
         }
     }*/
-    public ChefDeProjet assignerDeveloppeur(Long chefDeProjet_id, Long devId) {
+/*    public ChefDeProjet assignerDeveloppeur(Long chefDeProjet_id, Long devId) {
         Optional<ChefDeProjet> chefOpt = chefDeProjetRepository.findById(chefDeProjet_id);
         Optional<Developpeur> devOpt = developpeurRepository.findById(devId);
 
@@ -169,7 +171,44 @@ public class ChefDeProjetService {
         } else {
             throw new EntityNotFoundException("Chef de projet ou développeur introuvable.");
         }
+    }*/
+   /* public ChefDeProjet assignerDeveloppeur(Long chefId, Long devId) {
+        ChefDeProjet chef = chefDeProjetRepository.findById(chefId)
+            .orElseThrow(() -> new RuntimeException("Chef de projet non trouvé"));
+
+        Developpeur developpeur = developpeurRepository.findById(devId)
+            .orElseThrow(() -> new RuntimeException("Développeur non trouvé"));
+
+        developpeur.setChefDeProjet(chef);
+        developpeurRepository.save(developpeur);
+        chefDeProjetRepository.save(chef);
+
+        return chef;
+    }*/
+    @Transactional
+    public ChefDeProjet assignerDeveloppeur(Long chefId, Long devId) {
+        ChefDeProjet chef = chefDeProjetRepository.findById(chefId)
+            .orElseThrow(() -> new RuntimeException("Chef introuvable"));
+
+        Developpeur dev = developpeurRepository.findById(devId)
+            .orElseThrow(() -> new RuntimeException("Développeur introuvable"));
+
+        // Si le développeur a pas encore de score, initialiser à 0.0
+        if (dev.getScore() == null) {
+            dev.setScore(0.0);
+        }
+
+        // Assigner le chef au développeur
+        dev.setChefDeProjet(chef);
+        developpeurRepository.save(dev);
+
+        // Recalcul du score du chef
+        Double nouveauScore = scoreService.calculerScoreChef(chefId);
+        chef.setScore(nouveauScore);
+
+        return chefDeProjetRepository.save(chef);
     }
+
 
     
     public boolean existeParUsername(String username) {
@@ -190,4 +229,3 @@ public class ChefDeProjetService {
     }
 
 }
-

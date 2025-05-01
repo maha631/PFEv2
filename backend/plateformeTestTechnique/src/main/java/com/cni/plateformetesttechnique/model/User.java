@@ -43,8 +43,23 @@ public class User {
 	@Column(unique = true, nullable = true)
 	private String activationToken;
 	
+	
+	@Lob
+	private byte[] image;
+
 
 	
+	
+	public byte[] getImage() {
+		return image;
+	}
+
+
+	public void setImage(byte[] image) {
+		this.image = image;
+	}
+
+
 	private Boolean active = false;
 	
 

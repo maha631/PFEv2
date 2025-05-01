@@ -1,5 +1,6 @@
 package com.cni.plateformetesttechnique.model;
 
+import java.util.Collection;
 import java.util.List;
 
 
@@ -30,7 +31,7 @@ public class Developpeur extends User {
 	private List<InvitationTest> invitations;
 	
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chefDeProjet_id")
 	@JsonBackReference
 
@@ -115,6 +116,8 @@ public class Developpeur extends User {
 	public void setAssigned(boolean isAssigned) {
 		this.isAssigned = isAssigned;
 	}
+
+	
 	
 
 	

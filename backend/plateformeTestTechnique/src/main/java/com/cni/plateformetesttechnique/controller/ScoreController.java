@@ -3,6 +3,7 @@ package com.cni.plateformetesttechnique.controller;
 
 import com.cni.plateformetesttechnique.service.ScoreService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,7 +21,7 @@ public class ScoreController {
     private ScoreService scoreService;
 
     @GetMapping("/{testId}/{developpeurId}")
-    @PreAuthorize("hasRole('DEVELOPPEUR') or hasRole('ADMIN') or hasRole('CHEF')")
+    @PreAuthorize("hasRole('DEVELOPPEUR') or hasRole('ADMIN') or hasRole('ROLE_CHEF')")
 
     public ResponseEntity<Map<String, Object>> getScoreByDeveolperAndTestId(
             @PathVariable Long testId,
@@ -126,12 +127,11 @@ public class ScoreController {
 //            return ResponseEntity.badRequest().body(errorResponse);
 //        }
 //    }
-@PreAuthorize("hasRole('DEVELOPPEUR') or hasRole('ADMIN') or hasRole('CHEF')")
-
+@PreAuthorize("hasRole('DEVELOPPEUR') or hasRole('ADMIN') or hasRole('ROLE_CHEF')")
 @GetMapping("/obtenir/developpeur")
 public ResponseEntity<Map<String, Object>> obtenirScore(
         @AuthenticationPrincipal UserDetailsImpl userDetails,
-        @RequestParam(required = false) Long developpeurId) {
+        @RequestParam(name = "developpeurId", required = false) Long developpeurId){
     try {
         Long connectedDeveloperId = userDetails.getId();  // ID du développeur connecté
 
@@ -182,7 +182,7 @@ public ResponseEntity<Map<String, Object>> obtenirScore(
 }
 
     @GetMapping("/calculer/{testId}")
-    @PreAuthorize("hasRole('DEVELOPPEUR') or hasRole('ADMIN') or hasRole('CHEF')")
+    @PreAuthorize("hasRole('DEVELOPPEUR') or hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public ResponseEntity<Map<String, Object>> calculerScore(
             @PathVariable Long testId,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -212,10 +212,11 @@ public ResponseEntity<Map<String, Object>> obtenirScore(
     
     
     @GetMapping("/chef/{chefDeProjet_id}")
-    @PreAuthorize("hasRole('CHEF') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_CHEF') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> getScoreChef(@PathVariable(name = "chefDeProjet_id") Long chefDeProjet_id) {
         try {
-            Double score = scoreService.calculerScoreChef(chefDeProjet_id);
+            //Double score = scoreService.calculerScoreChef(chefDeProjet_id);
+            Double score = scoreService.updateChefScore(chefDeProjet_id);
             Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
             response.put("score", score);
@@ -225,14 +226,26 @@ public ResponseEntity<Map<String, Object>> obtenirScore(
             errorResponse.put("status", "error");
             errorResponse.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse);
+        } 
+    }
+    
+
+    
+    @PutMapping("/modifier/score")
+    public ResponseEntity<?> modifierScore(
+            @RequestParam("developpeurId") Long developpeurId,
+            @RequestParam("nouveauScore") Double nouveauScore) {
+        try {
+        	scoreService.mettreAJourScoreDeveloppeur(developpeurId, nouveauScore);
+            return ResponseEntity.ok("Score mis à jour !");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erreur");
         }
     }
 
     
- 
     
     
-    
-    
+  
 
 }

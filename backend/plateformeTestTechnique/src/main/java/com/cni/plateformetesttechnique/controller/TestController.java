@@ -89,7 +89,7 @@ public class TestController {
 
     // Créer un test - accessible par ADMIN et ChefProjet uniquement
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public ResponseEntity<Test> createTest(@RequestBody Test test) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -123,7 +123,7 @@ public class TestController {
 
     // Mettre à jour un test - accessible par ADMIN et ChefProjet uniquement
     @PutMapping("/{testId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public ResponseEntity<Test> updateTest(@PathVariable Long testId, @RequestBody Test updatedTest) {
         Test updated = testService.updateTest(testId, updatedTest);
         return ResponseEntity.ok(updated);
@@ -144,9 +144,9 @@ public class TestController {
 
 
     @PutMapping("/{testId}/publish")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public ResponseEntity<Test> publishTest(
-            @PathVariable Long testId,
+            @PathVariable("testId") Long testId,
             @RequestBody PublishTestRequest request // DTO avec accesRestreint et developerIds
     ) {
         Test publishedTest = testService.publishTest(testId, request.getAccesRestreint(), request.getDeveloperIds());

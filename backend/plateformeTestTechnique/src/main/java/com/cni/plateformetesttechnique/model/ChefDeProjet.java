@@ -21,10 +21,10 @@ public class ChefDeProjet extends User {
     private Double score;
   
     @JsonIgnore 
-    @OneToMany(mappedBy = "chefDeProjet", cascade = CascadeType.ALL)
     @JsonManagedReference
+    @OneToMany(mappedBy = "chefDeProjet", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Developpeur> developpeurs;
 
-    private List<Developpeur> developpeurs; 
    
 
     public ChefDeProjet() {
@@ -70,9 +70,11 @@ public class ChefDeProjet extends User {
 		return id;
 	}
 
+	
 	public void setId(Long id) {
+
 		this.id = id;
-	}
+	}}
 	
     
-}
+
