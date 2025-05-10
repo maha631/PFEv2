@@ -195,10 +195,10 @@ public class TestController {
     }
 
     // Vérifier si un test est complété - accessible à tous
-    @GetMapping("/isCompleted")
-    public boolean isTestCompleted(
-            @RequestParam Long testId,
-            @RequestParam Long developpeurId) {
-        return testService.isTestCompleted(testId, developpeurId);
-    }
+//    @GetMapping("/isCompleted")
+//    public boolean isTestCompleted(
+//            @RequestParam Long testId,
+//            @RequestParam Long developpeurId) {
+//        return testService.isTestCompleted(testId, developpeurId);
+//    }
 }

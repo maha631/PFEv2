@@ -1,5 +1,9 @@
 package com.cni.plateformetesttechnique.model;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 public class DeveloppeurTestScore {
@@ -15,6 +19,10 @@ public class DeveloppeurTestScore {
     @ManyToOne
     @JoinColumn(name = "test_id", nullable = false)
     private Test test;
+    private int attemptNumber; // Numéro de la tentative
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
 
     private Double score;  // Score final du développeur pour ce test
 
@@ -49,6 +57,21 @@ public class DeveloppeurTestScore {
     public void setTest(Test test) {
         this.test = test;
     }
+    public int getAttemptNumber() {
+        return attemptNumber;
+    }
+
+    public void setAttemptNumber(int attemptNumber) {
+        this.attemptNumber = attemptNumber;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 
     public Double getScore() {
         return score;
@@ -64,7 +87,9 @@ public class DeveloppeurTestScore {
                 "id=" + id +
                 ", developpeur=" + developpeur +
                 ", test=" + test +
+                ", attemptNumber=" + attemptNumber +
                 ", score=" + score +
                 '}';
     }
+
 }

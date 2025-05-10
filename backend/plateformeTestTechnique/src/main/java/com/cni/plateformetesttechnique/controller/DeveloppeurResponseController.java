@@ -3,7 +3,9 @@ package com.cni.plateformetesttechnique.controller;
 import com.cni.plateformetesttechnique.dto.CodeAnalysisRequest;
 import com.cni.plateformetesttechnique.dto.ReponseDTO;
 import com.cni.plateformetesttechnique.model.DeveloppeurResponse;
+import com.cni.plateformetesttechnique.model.DeveloppeurTestScore;
 import com.cni.plateformetesttechnique.repository.DeveloppeurResponseRepository;
+import com.cni.plateformetesttechnique.repository.DeveloppeurTestScoreRepository;
 import com.cni.plateformetesttechnique.security.services.UserDetailsImpl;
 import com.cni.plateformetesttechnique.service.DeveloppeurResponseService;
 import com.cni.plateformetesttechnique.repository.UserRepository;
@@ -16,9 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/responses")
@@ -29,6 +29,10 @@ public class DeveloppeurResponseController {
     @Autowired
 
     private DeveloppeurResponseRepository developpeurResponseRepository;
+
+    @Autowired
+
+    private DeveloppeurTestScoreRepository developpeurTestScoreRepository;
     @Autowired
     private UserRepository userRepository;
     @PostMapping("/enregistrer")
@@ -62,13 +66,13 @@ public class DeveloppeurResponseController {
         }
 
     }
-    @GetMapping("/review/{testId}/{developpeurId}")
-    public List<DeveloppeurResponse> getReview(
-            @PathVariable Long testId,
-            @PathVariable Long developpeurId
-    ) {
-        return developpeurResponseRepository.findByTestIdAndDeveloppeurId(testId, developpeurId);
-    }
+//    @GetMapping("/review/{testId}/{developerId}")
+//    public List<DeveloppeurResponse> getReview(
+//            @PathVariable Long testId,
+//            @PathVariable Long developpeurId
+//    ) {
+//        return developpeurResponseRepository.findByTestIdAndDeveloppeurId(testId, developpeurId);
+//    }
 
     // Enregistrer une réponse - accessible par DEVELOPPEUR uniquement
 //    @PostMapping("/submit")
@@ -105,24 +109,50 @@ public class DeveloppeurResponseController {
 //            return ResponseEntity.badRequest().body(errorResponse);
 //        }
 //    }
+//    @GetMapping("/mes-reponses/{testId}")
+//    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
+//    public ResponseEntity<List<DeveloppeurResponse>> getMesReponses(@PathVariable Long testId) {
+//        // Récupérer l'utilisateur connecté
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+//        Long developpeurId = userDetails.getId(); // ID du développeur connecté
+//
+//        // Récupérer les réponses de CE développeur pour CE test
+//        List<DeveloppeurResponse> mesReponses = developpeurResponseRepository
+//                .findByDeveloppeurTestScore_Developpeur_IdAndDeveloppeurTestScore_Test_Id(developpeurId, testId);
+//
+//        return ResponseEntity.ok(mesReponses);
+//    }
     @GetMapping("/mes-reponses/{testId}")
     @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
     public ResponseEntity<List<DeveloppeurResponse>> getMesReponses(@PathVariable Long testId) {
-        // Récupérer l'utilisateur connecté
+        // 🔐 Récupérer l'utilisateur connecté
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Long developpeurId = userDetails.getId(); // ID du développeur connecté
 
-        // Récupérer les réponses de CE développeur pour CE test
-        List<DeveloppeurResponse> mesReponses = developpeurResponseRepository.findByTestIdAndDeveloppeurId(testId, developpeurId);
+        // 🔄 Récupérer la dernière tentative du développeur pour ce test
+        Optional<DeveloppeurTestScore> lastAttemptOpt = developpeurTestScoreRepository
+                .findTopByDeveloppeur_IdAndTest_IdOrderByAttemptNumberDesc(developpeurId, testId);
+
+        if (lastAttemptOpt.isEmpty()) {
+            // 🚫 Aucun score trouvé, donc aucune tentative
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        DeveloppeurTestScore lastAttempt = lastAttemptOpt.get();
+
+        // ✅ Récupérer les réponses liées à CETTE tentative (et pas toutes les tentatives)
+        List<DeveloppeurResponse> mesReponses = developpeurResponseRepository
+                .findByDeveloppeurTestScore_Id(lastAttempt.getId());
 
         return ResponseEntity.ok(mesReponses);
     }
 
-    @DeleteMapping("/supprimer/{testId}/{developpeurId}")
-    public ResponseEntity<String> supprimerReponses(@PathVariable Long testId, @PathVariable Long developpeurId) {
+    @DeleteMapping("/supprimer/{developpeurTestScoreId}")
+    public ResponseEntity<String> supprimerReponses(@PathVariable Long developpeurTestScoreId) {
         try {
-            developpeurResponseService.supprimerReponses(testId, developpeurId);
+            developpeurResponseService.supprimerReponsesParTentative(developpeurTestScoreId );
             return ResponseEntity.ok("Réponses supprimées avec succès.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("Erreur : " + e.getMessage());

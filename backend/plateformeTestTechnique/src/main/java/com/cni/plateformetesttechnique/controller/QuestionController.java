@@ -91,6 +91,7 @@ import com.cni.plateformetesttechnique.dto.QuestionRequest;
 import com.cni.plateformetesttechnique.model.*;
 import com.cni.plateformetesttechnique.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -105,7 +106,11 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
-
+    @GetMapping("/id-by-enonce")
+    public ResponseEntity<Long> getQuestionIdByEnonce(@RequestParam String enonce) {
+        Long id = questionService.getQuestionIdByEnonce(enonce);
+        return ResponseEntity.ok(id);
+    }
     // Ajouter une nouvelle question - accessible par ADMIN et ChefProjet uniquement
     // Ajouter une nouvelle question (y compris CodeQuestion)
     @PostMapping("/add")

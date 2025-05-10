@@ -351,11 +351,11 @@ public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest reques
     }
 
 
-    public boolean isTestCompleted(Long testId, Long developpeurId) {
-        int totalQuestions = testQuestionRepository.countByTest_Id(testId);
-        int answeredQuestions = developpeurResponseRepository.countByTest_IdAndDeveloppeur_Id(testId, developpeurId);
-        return answeredQuestions == totalQuestions;
-    }
+//    public boolean isTestCompleted(Long testId, Long developpeurId) {
+//        int totalQuestions = testQuestionRepository.countByTest_Id(testId);
+//        int answeredQuestions = developpeurResponseRepository.countByTest_IdAndDeveloppeur_Id(testId, developpeurId);
+//        return answeredQuestions == totalQuestions;
+//    }
     public List<Test> getTestsPubliesByUserId(Long userId) {
         return testRepository.findByCreateur_IdAndStatut(userId, "PUBLIE");
     }

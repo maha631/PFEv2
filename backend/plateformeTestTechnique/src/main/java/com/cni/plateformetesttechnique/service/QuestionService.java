@@ -20,6 +20,11 @@ public class QuestionService {
     private TestRepository testRepository;
     @Autowired
     private TestQuestionRepository testQuestionRepository;
+    public Long getQuestionIdByEnonce(String enonce) {
+        return questionRepository.findByEnonce(enonce)
+                .map(Question::getId)
+                .orElseThrow(() -> new RuntimeException("Aucune question trouvée avec cet énoncé: " + enonce));
+    }
 
     public Question ajouterQuestionDepuisDTO(QuestionRequest request) {
         if (request.getType() == TypeQuestion.QCM) {

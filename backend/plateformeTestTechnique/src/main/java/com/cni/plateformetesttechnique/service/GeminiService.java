@@ -25,41 +25,6 @@ public class GeminiService {
                 .defaultUriVariables(Map.of("key", apiKey))
                 .build();
     }
-
-//    public Mono<String> evaluateDeveloperResponse(String question, String reponse) {
-//
-//        String prompt = """
-//            Vous êtes un évaluateur technique.
-//
-//            Voici une question posée à un développeur, ainsi que sa réponse. Veuillez fournir une évaluation concise, professionnelle et structurée.
-//
-//            Question : %s
-//            Réponse : %s
-//
-//            Merci de fournir l’analyse dans le format suivant :
-//
-//            - Note : /10
-//            - Correction : [Correcte, Incorrecte]
-//            - Explication : phrase claire et concise
-//            - Réponse correcte : (à fournir uniquement si la réponse du candidat est Incorrecte)
-//            - Feedback : conseil(s) pour s’améliorer
-//
-//            Respectez exactement ce format sans ajouter d'autres éléments. N'utilisez que [Correcte, Incorrecte] sans variantes.
-//            """.formatted(question, reponse);
-//
-//
-//
-//        Map<String, Object> body = Map.of(
-//                "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt))))
-//        );
-//
-//        return webClient.post()
-//                .uri("?key={key}")
-//                .bodyValue(body)
-//                .retrieve()
-//                .bodyToMono(String.class);
-//
-//    }
 public Mono<EvaluationResult> evaluateDeveloperResponse(String question, String reponse,Integer point) {
 
     String prompt = """

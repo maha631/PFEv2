@@ -18,9 +18,6 @@ public class Question {
 
 	private String enonce;
 
-//	@OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-//	private List<AnswerOption> answerOptions; // Options de réponse pour la question
-
 	@Enumerated(EnumType.STRING)
 	private NiveauQuestion niveau;
 	private String technologie; // ex: Java, Python
