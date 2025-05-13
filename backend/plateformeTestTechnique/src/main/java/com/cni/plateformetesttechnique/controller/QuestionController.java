@@ -88,6 +88,7 @@
 package com.cni.plateformetesttechnique.controller;
 
 import com.cni.plateformetesttechnique.dto.QuestionRequest;
+import com.cni.plateformetesttechnique.dto.RemplacementRequest;
 import com.cni.plateformetesttechnique.model.*;
 import com.cni.plateformetesttechnique.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,6 +107,13 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
+    @PostMapping("/remplacer")
+    public ResponseEntity<Question> remplacerQuestion(
+                                                      @RequestBody RemplacementRequest request) {
+        Question nouvelle = questionService.remplacerQuestion(request);
+        return ResponseEntity.ok(nouvelle);
+    }
+
     @GetMapping("/id-by-enonce")
     public ResponseEntity<Long> getQuestionIdByEnonce(@RequestParam String enonce) {
         Long id = questionService.getQuestionIdByEnonce(enonce);

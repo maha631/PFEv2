@@ -374,5 +374,17 @@ public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest reques
 
         return testRepository.findByCreateur_IdAndStatut(chef.getId(), "PUBLIE");
     }
+    public boolean deleteTest(Long testId) {
+        Optional<Test> testOpt = testRepository.findById(testId);
+        if (testOpt.isPresent()) {
+            Test test = testOpt.get();
+            // Si tu veux vérifier si le test est encore en brouillon avant de le supprimer
+            if ("BROUILLON".equals(test.getStatut())) {
+                testRepository.delete(test);
+                return true;
+            }
+    }
+        return false; // ← Ajout du return manquant
 
+    }
 }

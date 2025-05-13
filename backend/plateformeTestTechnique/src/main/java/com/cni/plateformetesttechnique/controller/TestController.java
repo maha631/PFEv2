@@ -77,7 +77,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tests")
@@ -85,6 +87,21 @@ public class TestController {
 
     @Autowired
     private TestService testService;
+
+
+    @DeleteMapping("/{testId}")
+    public ResponseEntity<Map<String, String>> deleteTest(@PathVariable Long testId) {
+        boolean deleted = testService.deleteTest(testId);
+        Map<String, String> response = new HashMap<>();
+
+        if (deleted) {
+            response.put("message", "Test supprimé avec succès");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("message", "Le test n'existe pas ou n'est pas en statut Brouillon");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
 
     // Récupérer tous les tests - accessible à tous
     @GetMapping
@@ -121,13 +138,32 @@ public class TestController {
     @PostMapping("/questions")
     public ResponseEntity<?> generateQs(@Valid @RequestBody TestGenerationRequest request) {
         try {
-            // Logic to generate test...
             List<Question> questions = testService.getQuestionsForAutoGeneration(request);
-            return ResponseEntity.ok(questions);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Questions générées avec succès");
+            response.put("totalQuestions", questions.size());
+            response.put("questions", questions);
+
+            return ResponseEntity.ok(response);
+
         } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", ex.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
+//        @PostMapping("/questions")
+//    public ResponseEntity<?> generateQs(@Valid @RequestBody TestGenerationRequest request) {
+//        try {
+//            // Logic to generate test...
+//            List<Question> questions = testService.getQuestionsForAutoGeneration(request);
+//            return ResponseEntity.ok(questions);
+//        } catch (IllegalArgumentException ex) {
+//            return ResponseEntity.badRequest().body(ex.getMessage());
+//        }
+//    }
     // Créer un test - accessible par ADMIN et ChefProjet uniquement
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
