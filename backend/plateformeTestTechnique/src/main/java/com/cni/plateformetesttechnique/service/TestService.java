@@ -49,63 +49,7 @@ public class TestService {
         test.setDateCreation(LocalDateTime.now());
         return testRepository.save(test);
     }
-//    public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest request) {
-//        List<Question> allQuestions = questionRepository.findAll();
-//
-//        // 1. Filtrer par technologies
-//        List<Question> filtered = allQuestions.stream()
-//                .filter(q -> q.getTechnologie() != null)
-//                .filter(q -> request.getTechnologies().stream()
-//                        .anyMatch(t -> t.equalsIgnoreCase(q.getTechnologie())))
-//                .collect(Collectors.toList());
-//
-//        // 2. Sélection par type et niveau
-//
-//        // QCM
-//        List<Question> qcmFacile = filtered.stream()
-//                .filter(q -> q.getType() == TypeQuestion.QCM && q.getNiveau() == NiveauQuestion.FACILE)
-//                .limit(request.getNbQcmFacile())
-//                .collect(Collectors.toList());
-//
-//        List<Question> qcmMoyen = filtered.stream()
-//                .filter(q -> q.getType() == TypeQuestion.QCM && q.getNiveau() == NiveauQuestion.MOYEN)
-//                .limit(request.getNbQcmMoyen())
-//                .collect(Collectors.toList());
-//
-//        List<Question> qcmDifficile = filtered.stream()
-//                .filter(q -> q.getType() == TypeQuestion.QCM && q.getNiveau() == NiveauQuestion.DIFFICILE)
-//                .limit(request.getNbQcmDifficile())
-//                .collect(Collectors.toList());
-//
-//        // Code
-//        List<Question> codeFacile = filtered.stream()
-//                .filter(q -> q.getType() == TypeQuestion.Code && q.getNiveau() == NiveauQuestion.FACILE)
-//                .limit(request.getNbCodeFacile())
-//                .collect(Collectors.toList());
-//
-//        List<Question> codeMoyen = filtered.stream()
-//                .filter(q -> q.getType() == TypeQuestion.Code && q.getNiveau() == NiveauQuestion.MOYEN)
-//                .limit(request.getNbCodeMoyen())
-//                .collect(Collectors.toList());
-//
-//        List<Question> codeDifficile = filtered.stream()
-//                .filter(q -> q.getType() == TypeQuestion.Code && q.getNiveau() == NiveauQuestion.DIFFICILE)
-//                .limit(request.getNbCodeDifficile())
-//                .collect(Collectors.toList());
-//
-//        // 3. Fusion finale
-//        List<Question> result = new ArrayList<>();
-//        result.addAll(qcmFacile);
-//        result.addAll(qcmMoyen);
-//        result.addAll(qcmDifficile);
-//        result.addAll(codeFacile);
-//        result.addAll(codeMoyen);
-//        result.addAll(codeDifficile);
-//
-//        Collections.shuffle(result); // optionnel
-//
-//        return result;
-//    }
+
 public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest request) {
     List<Question> allQuestions = questionRepository.findAll();
 

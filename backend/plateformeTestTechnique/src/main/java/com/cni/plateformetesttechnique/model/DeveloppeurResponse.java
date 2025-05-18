@@ -197,7 +197,7 @@ public class DeveloppeurResponse {
     private Boolean isCorrect;
 
 
-
+    @Lob
     private String reponseLibre;
 
     private Integer note;

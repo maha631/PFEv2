@@ -15,5 +15,6 @@ public interface DeveloppeurTestScoreRepository extends JpaRepository<Developpeu
     int countByDeveloppeur_IdAndTest_Id(Long developpeurId, Long testId);
     Optional<DeveloppeurTestScore> findTopByDeveloppeur_IdAndTest_IdOrderByAttemptNumberDesc(Long developpeurId, Long testId);
 
+    List<DeveloppeurTestScore> findByTestId(Long testId);
 }
 

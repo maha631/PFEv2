@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +36,7 @@ public class DeveloppeurResponseController {
     private DeveloppeurTestScoreRepository developpeurTestScoreRepository;
     @Autowired
     private UserRepository userRepository;
+
     @PostMapping("/enregistrer")
     public ResponseEntity<Map<String, Object>> enregistrerReponse(@RequestBody ReponseDTO reponseDTO) {
         try {
@@ -48,7 +50,7 @@ public class DeveloppeurResponseController {
                     developpeurId,
                     reponseDTO.getReponseLibre()
             );
-                        Map<String, Object> response = new HashMap<>();
+            Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
             response.put("message", "Réponse enregistrée avec succès.");
             response.put("testId", reponseDTO.getTestId());
@@ -123,8 +125,47 @@ public class DeveloppeurResponseController {
 //
 //        return ResponseEntity.ok(mesReponses);
 //    }
+//    @GetMapping("/mes-reponses/{testId}/{developpeurId}")
+//    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR') or hasRole('ADMIN') or hasRole('CHEF')")
+//    public ResponseEntity<List<DeveloppeurResponse>> getMesReponses(
+//            @PathVariable Long testId,
+//            @PathVariable Long developpeurId,
+//            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+//        try {
+//            Long connectedDeveloperId = userDetails.getId();
+//
+//            // Vérifier si l'utilisateur est ADMIN ou CHEF
+//            boolean isAdminOrChef = userDetails.getAuthorities().stream()
+//                    .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN") || authority.getAuthority().equals("ROLE_CHEF"));
+//
+//            // Si l'utilisateur n'est pas admin/chef et tente d'accéder à un autre développeur → interdit
+//            if (!isAdminOrChef && !connectedDeveloperId.equals(developpeurId)) {
+//                return ResponseEntity.status(403).body(Collections.emptyList());
+//            }
+//
+//            // Récupérer la dernière tentative du développeur pour ce test
+//            Optional<DeveloppeurTestScore> lastAttemptOpt = developpeurTestScoreRepository
+//                    .findTopByDeveloppeur_IdAndTest_IdOrderByAttemptNumberDesc(developpeurId, testId);
+//
+//            if (lastAttemptOpt.isEmpty()) {
+//                return ResponseEntity.ok(Collections.emptyList());
+//            }
+//
+//            DeveloppeurTestScore lastAttempt = lastAttemptOpt.get();
+//
+//            // Récupérer les réponses liées à cette tentative
+//            List<DeveloppeurResponse> mesReponses = developpeurResponseRepository
+//                    .findByDeveloppeurTestScore_Id(lastAttempt.getId());
+//
+//            return ResponseEntity.ok(mesReponses);
+//
+//        } catch (Exception e) {
+//            return ResponseEntity.status(500).body(Collections.emptyList());
+//        }
+//    }
+
     @GetMapping("/mes-reponses/{testId}")
-    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
+    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')or hasRole('ADMIN') or hasRole('CHEF')")
     public ResponseEntity<List<DeveloppeurResponse>> getMesReponses(@PathVariable Long testId) {
         // 🔐 Récupérer l'utilisateur connecté
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -148,11 +189,33 @@ public class DeveloppeurResponseController {
 
         return ResponseEntity.ok(mesReponses);
     }
+////
+@GetMapping("/dev-reponses/{testId}/{developpeurId}")
+@PreAuthorize("hasRole('ROLE_DEVELOPPEUR')or hasRole('ADMIN') or hasRole('CHEF')")
+public ResponseEntity<List<DeveloppeurResponse>> getdevReponses(@PathVariable Long testId,@PathVariable Long developpeurId) {
 
+    // 🔄 Récupérer la dernière tentative du développeur pour ce test
+    Optional<DeveloppeurTestScore> lastAttemptOpt = developpeurTestScoreRepository
+            .findTopByDeveloppeur_IdAndTest_IdOrderByAttemptNumberDesc(developpeurId, testId);
+
+    if (lastAttemptOpt.isEmpty()) {
+        // 🚫 Aucun score trouvé, donc aucune tentative
+        return ResponseEntity.ok(Collections.emptyList());
+    }
+
+    DeveloppeurTestScore lastAttempt = lastAttemptOpt.get();
+
+    // ✅ Récupérer les réponses liées à CETTE tentative (et pas toutes les tentatives)
+    List<DeveloppeurResponse> mesReponses = developpeurResponseRepository
+            .findByDeveloppeurTestScore_Id(lastAttempt.getId());
+
+    return ResponseEntity.ok(mesReponses);
+}
+    ///
     @DeleteMapping("/supprimer/{developpeurTestScoreId}")
     public ResponseEntity<String> supprimerReponses(@PathVariable Long developpeurTestScoreId) {
         try {
-            developpeurResponseService.supprimerReponsesParTentative(developpeurTestScoreId );
+            developpeurResponseService.supprimerReponsesParTentative(developpeurTestScoreId);
             return ResponseEntity.ok("Réponses supprimées avec succès.");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body("Erreur : " + e.getMessage());

@@ -154,16 +154,6 @@ public class TestController {
         }
     }
 
-//        @PostMapping("/questions")
-//    public ResponseEntity<?> generateQs(@Valid @RequestBody TestGenerationRequest request) {
-//        try {
-//            // Logic to generate test...
-//            List<Question> questions = testService.getQuestionsForAutoGeneration(request);
-//            return ResponseEntity.ok(questions);
-//        } catch (IllegalArgumentException ex) {
-//            return ResponseEntity.badRequest().body(ex.getMessage());
-//        }
-//    }
     // Créer un test - accessible par ADMIN et ChefProjet uniquement
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ChefProjet')")
@@ -192,11 +182,6 @@ public class TestController {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return testService.getTestsForCurrentUser(userDetails);
     }
-
-//    public ResponseEntity<Test> createTest(@RequestBody Test test) {
-//        Test createdTest = testService.createTest(test);
-//        return ResponseEntity.ok(createdTest);
-//    }
 
     // Mettre à jour un test - accessible par ADMIN et ChefProjet uniquement
     @PutMapping("/{testId}")

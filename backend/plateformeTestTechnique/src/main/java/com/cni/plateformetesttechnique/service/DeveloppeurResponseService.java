@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,35 +41,30 @@ public class DeveloppeurResponseService {
     @Autowired
 
     private ScoreService scoreService;
-
-
     public Double enregistrerReponse(Long testId, Long questionId, List<Long> selectedOptionIds, Long developpeurId, String reponseLibre) {
         System.out.println(">>> Début de la méthode enregistrerReponse()");
-        System.out.println("testId: " + testId);
-        System.out.println("questionId: " + questionId);
-        System.out.println("developpeurId: " + developpeurId);
-        System.out.println("selectedOptionIds: " + selectedOptionIds);
-        System.out.println("reponseLibre: " + reponseLibre);
-
         Developpeur developpeur = developpeurRepository.findById(developpeurId)
                 .orElseThrow(() -> new RuntimeException("Développeur non trouvé avec ID: " + developpeurId));
 
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Test non trouvé avec ID: " + testId));
-        System.out.println("Test récupéré: " + test.getTitre());
 
-        // ✅ Trouver ou créer la bonne tentative
+        // ✅ Récupérer ou créer la tentative en cours
         DeveloppeurTestScore developpeurTestScore = developpeurTestScoreRepository
                 .findTopByDeveloppeur_IdAndTest_IdOrderByAttemptNumberDesc(developpeurId, testId)
                 .orElse(null);
 
         boolean needsNewAttempt = true;
         if (developpeurTestScore != null) {
-            long responsesCount = developpeurResponseRepository
-                    .countByDeveloppeurTestScore_Id(developpeurTestScore.getId());
+            long responsesCount = developpeurResponseRepository.countByDeveloppeurTestScore_Id(developpeurTestScore.getId());
             long totalQuestions = test.getTestQuestions().size();
+//
+//            // 🔒 Ne pas permettre une nouvelle réponse si déjà terminé
+//            if (developpeurTestScore.getFinishedAt() != null) {
+//                throw new RuntimeException("Ce test a déjà été terminé.");
+//            }
 
-            if (responsesCount < totalQuestions) {
+            if (responsesCount < totalQuestions && developpeurTestScore.getFinishedAt() == null) {
                 needsNewAttempt = false;
             }
         }
@@ -80,12 +76,25 @@ public class DeveloppeurResponseService {
             developpeurTestScore.setTest(test);
             developpeurTestScore.setScore(0.0);
             developpeurTestScore.setAttemptNumber(nextAttempt);
+            developpeurTestScore.setCreatedAt(LocalDateTime.now());
             developpeurTestScore = developpeurTestScoreRepository.save(developpeurTestScore);
         }
 
+        // ✅ Gérer le dépassement du temps
+        LocalDateTime startedAt = developpeurTestScore.getCreatedAt();
+        Integer dureeMinutes = test.getDuree(); // durée en minutes
+        if (dureeMinutes != null && startedAt != null) {
+            LocalDateTime expectedEndTime = startedAt.plusMinutes(dureeMinutes);
+            if (LocalDateTime.now().isAfter(expectedEndTime)) {
+                developpeurTestScore.setFinishedAt(LocalDateTime.now());
+                developpeurTestScoreRepository.save(developpeurTestScore);
+                throw new RuntimeException("Temps écoulé pour compléter le test.");
+            }
+        }
+
+        // ✅ Vérification de la question
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question non trouvée avec ID: " + questionId));
-        System.out.println("Question récupérée: " + question.getEnonce());
 
         Optional<TestQuestion> testQuestionOpt = testQuestionRepository.findByTestIdAndQuestionId(testId, questionId);
         Integer point = testQuestionOpt.map(TestQuestion::getPoints).orElse(0);
@@ -96,13 +105,19 @@ public class DeveloppeurResponseService {
             throw new RuntimeException("Cette question n'appartient pas au test spécifié.");
         }
 
-        if (question.getType() != TypeQuestion.QCM && reponseLibre != null) {
-            EvaluationResult geminiResponse = GeminiService.evaluateDeveloperResponse(question.getEnonce(), reponseLibre, point).block();
-            DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(
-                    question,
-                    null,
-                    true
+        // ✅ Vérification s'il a déjà répondu à cette question
+        boolean alreadyAnswered = developpeurResponseRepository.existsByDeveloppeurTestScore_IdAndQuestion_Id(developpeurTestScore.getId(), questionId);
+        if (alreadyAnswered) {
+            throw new RuntimeException("Vous avez déjà répondu à cette question.");
+        }
 
+        // ✅ Enregistrement de la réponse
+        if (question.getType() != TypeQuestion.QCM && reponseLibre != null) {
+            EvaluationResult geminiResponse = GeminiService.evaluateDeveloperResponse(
+                    question.getEnonce(), reponseLibre, point).block();
+
+            DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(
+                    question, null, true
             );
             developpeurResponse.setDeveloppeurTestScore(developpeurTestScore);
             developpeurResponse.setIsCorrect(geminiResponse.getIsCorrecte());
@@ -111,6 +126,7 @@ public class DeveloppeurResponseService {
             developpeurResponse.setExplication(geminiResponse.getExplication());
             developpeurResponse.setFeedback(geminiResponse.getFeedback());
             developpeurResponse.setReponseCorrecte(geminiResponse.getReponseCorrecte());
+
             developpeurResponseRepository.save(developpeurResponse);
         } else {
             List<AnswerOption> selectedOptions = answerOptionRepository.findAllByIdIn(selectedOptionIds);
@@ -119,24 +135,126 @@ public class DeveloppeurResponseService {
             if (!allOptionsBelongToQuestion) {
                 throw new RuntimeException("Certaines options sélectionnées n'appartiennent pas à cette question.");
             }
+
             boolean isCorrect = selectedOptions.stream().allMatch(AnswerOption::getIsCorrect);
             DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(
-                    question,
-                    selectedOptions,
-                    isCorrect
-
+                    question, selectedOptions, isCorrect
             );
             developpeurResponse.setDeveloppeurTestScore(developpeurTestScore);
             developpeurResponseRepository.save(developpeurResponse);
         }
 
-        List<DeveloppeurResponse> responses = developpeurResponseRepository
-                .findByDeveloppeurTestScore_Developpeur_IdAndDeveloppeurTestScore_Test_Id(developpeurId, testId);
+        // ✅ Vérification : toutes les questions sont-elles répondues ?
+        long totalReponses = developpeurResponseRepository.countByDeveloppeurTestScore_Id(developpeurTestScore.getId());
+        long totalQuestions = test.getTestQuestions().size();
+        if (totalReponses == totalQuestions) {
+            developpeurTestScore.setFinishedAt(LocalDateTime.now());
+            developpeurTestScoreRepository.save(developpeurTestScore);
+        }
+
+        // ✅ Calcul du score
         System.out.println("Mise à jour du score après cette réponse.");
         Double score = scoreService.calculerScoreParTentative(developpeurTestScore.getId());
-        return score;
 
+        return score;
     }
+
+
+//    public Double enregistrerReponse(Long testId, Long questionId, List<Long> selectedOptionIds, Long developpeurId, String reponseLibre) {
+//        System.out.println(">>> Début de la méthode enregistrerReponse()");
+//        System.out.println("testId: " + testId);
+//        System.out.println("questionId: " + questionId);
+//        System.out.println("developpeurId: " + developpeurId);
+//        System.out.println("selectedOptionIds: " + selectedOptionIds);
+//        System.out.println("reponseLibre: " + reponseLibre);
+//
+//        Developpeur developpeur = developpeurRepository.findById(developpeurId)
+//                .orElseThrow(() -> new RuntimeException("Développeur non trouvé avec ID: " + developpeurId));
+//
+//        Test test = testRepository.findById(testId)
+//                .orElseThrow(() -> new RuntimeException("Test non trouvé avec ID: " + testId));
+//        System.out.println("Test récupéré: " + test.getTitre());
+//
+//        // ✅ Trouver ou créer la bonne tentative
+//        DeveloppeurTestScore developpeurTestScore = developpeurTestScoreRepository
+//                .findTopByDeveloppeur_IdAndTest_IdOrderByAttemptNumberDesc(developpeurId, testId)
+//                .orElse(null);
+//
+//        boolean needsNewAttempt = true;
+//        if (developpeurTestScore != null) {
+//            long responsesCount = developpeurResponseRepository
+//                    .countByDeveloppeurTestScore_Id(developpeurTestScore.getId());
+//            long totalQuestions = test.getTestQuestions().size();
+//
+//            if (responsesCount < totalQuestions) {
+//                needsNewAttempt = false;
+//            }
+//        }
+//
+//        if (needsNewAttempt) {
+//            int nextAttempt = developpeurTestScore != null ? developpeurTestScore.getAttemptNumber() + 1 : 1;
+//            developpeurTestScore = new DeveloppeurTestScore();
+//            developpeurTestScore.setDeveloppeur(developpeur);
+//            developpeurTestScore.setTest(test);
+//            developpeurTestScore.setScore(0.0);
+//            developpeurTestScore.setAttemptNumber(nextAttempt);
+//            developpeurTestScore = developpeurTestScoreRepository.save(developpeurTestScore);
+//        }
+//
+//        Question question = questionRepository.findById(questionId)
+//                .orElseThrow(() -> new RuntimeException("Question non trouvée avec ID: " + questionId));
+//        System.out.println("Question récupérée: " + question.getEnonce());
+//
+//        Optional<TestQuestion> testQuestionOpt = testQuestionRepository.findByTestIdAndQuestionId(testId, questionId);
+//        Integer point = testQuestionOpt.map(TestQuestion::getPoints).orElse(0);
+//
+//        boolean questionInTest = test.getTestQuestions().stream()
+//                .anyMatch(tq -> tq.getQuestion().getId().equals(questionId));
+//        if (!questionInTest) {
+//            throw new RuntimeException("Cette question n'appartient pas au test spécifié.");
+//        }
+//
+//        if (question.getType() != TypeQuestion.QCM && reponseLibre != null) {
+//            EvaluationResult geminiResponse = GeminiService.evaluateDeveloperResponse(question.getEnonce(), reponseLibre, point).block();
+//            DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(
+//                    question,
+//                    null,
+//                    true
+//
+//            );
+//            developpeurResponse.setDeveloppeurTestScore(developpeurTestScore);
+//            developpeurResponse.setIsCorrect(geminiResponse.getIsCorrecte());
+//            developpeurResponse.setReponseLibre(reponseLibre);
+//            developpeurResponse.setNote(geminiResponse.getNote());
+//            developpeurResponse.setExplication(geminiResponse.getExplication());
+//            developpeurResponse.setFeedback(geminiResponse.getFeedback());
+//            developpeurResponse.setReponseCorrecte(geminiResponse.getReponseCorrecte());
+//            developpeurResponseRepository.save(developpeurResponse);
+//        } else {
+//            List<AnswerOption> selectedOptions = answerOptionRepository.findAllByIdIn(selectedOptionIds);
+//            boolean allOptionsBelongToQuestion = selectedOptions.stream()
+//                    .allMatch(option -> option.getQuestion().getId().equals(questionId));
+//            if (!allOptionsBelongToQuestion) {
+//                throw new RuntimeException("Certaines options sélectionnées n'appartiennent pas à cette question.");
+//            }
+//            boolean isCorrect = selectedOptions.stream().allMatch(AnswerOption::getIsCorrect);
+//            DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(
+//                    question,
+//                    selectedOptions,
+//                    isCorrect
+//
+//            );
+//            developpeurResponse.setDeveloppeurTestScore(developpeurTestScore);
+//            developpeurResponseRepository.save(developpeurResponse);
+//        }
+//
+//        List<DeveloppeurResponse> responses = developpeurResponseRepository
+//                .findByDeveloppeurTestScore_Developpeur_IdAndDeveloppeurTestScore_Test_Id(developpeurId, testId);
+//        System.out.println("Mise à jour du score après cette réponse.");
+//        Double score = scoreService.calculerScoreParTentative(developpeurTestScore.getId());
+//        return score;
+//
+//    }
 
 
 
