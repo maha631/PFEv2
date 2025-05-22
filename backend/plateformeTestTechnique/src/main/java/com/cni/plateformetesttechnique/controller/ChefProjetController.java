@@ -110,6 +110,7 @@ public class ChefProjetController {
 
         return ResponseEntity.ok(response);
     }*/
+    
     @PostMapping("/{chefId}/assign/{devId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> assignerDeveloppeur(
@@ -152,6 +153,7 @@ public class ChefProjetController {
         return ResponseEntity.ok(response);
     }
 
+    
 
 
 

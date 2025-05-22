@@ -2,18 +2,15 @@ package com.cni.plateformetesttechnique.service;
 
 import com.cni.plateformetesttechnique.dto.DeveloppeurDashboardDTO;
 import com.cni.plateformetesttechnique.dto.TestStatDTO;
-import com.cni.plateformetesttechnique.model.Developpeur;
-import com.cni.plateformetesttechnique.model.DeveloppeurResponse;
-import com.cni.plateformetesttechnique.model.Test;
+import com.cni.plateformetesttechnique.model.*;
 import com.cni.plateformetesttechnique.repository.DeveloppeurRepository;
 import com.cni.plateformetesttechnique.repository.DeveloppeurResponseRepository;
-import com.cni.plateformetesttechnique.repository.TestRepository;
+import com.cni.plateformetesttechnique.repository.DeveloppeurTestScoreRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -26,30 +23,34 @@ public class DashboardService {
     private DeveloppeurResponseRepository responseRepository;
 
     @Autowired
-    private TestRepository testRepository;
+    private DeveloppeurTestScoreRepository testScoreRepository;
 
     public DeveloppeurDashboardDTO getDashboardByDeveloppeurId(Long developpeurId) {
-        Developpeur dev = developpeurRepository.findById(developpeurId)
+
+        // Vérifier si le développeur existe
+        Developpeur developpeur = developpeurRepository.findById(developpeurId)
                 .orElseThrow(() -> new RuntimeException("Développeur non trouvé"));
 
-        List<DeveloppeurResponse> responses = responseRepository.findByDeveloppeurId(developpeurId);
+        // Récupérer tous les scores de test du développeur
+        List<DeveloppeurTestScore> testScores = testScoreRepository.findByDeveloppeur_Id(developpeurId);
 
-        // Group responses by test
-        Map<Test, List<DeveloppeurResponse>> responsesByTest = responses.stream()
-                .collect(Collectors.groupingBy(DeveloppeurResponse::getTest));
-
-        List<TestStatDTO> testStats = new ArrayList<>();
         int totalCorrectAnswers = 0;
         int totalQuestions = 0;
+        List<TestStatDTO> testStats = new ArrayList<>();
 
-        for (Map.Entry<Test, List<DeveloppeurResponse>> entry : responsesByTest.entrySet()) {
-            Test test = entry.getKey();
-            List<DeveloppeurResponse> testResponses = entry.getValue();
+        for (DeveloppeurTestScore score : testScores) {
+            Test test = score.getTest();
 
-            long correctAnswers = testResponses.stream().filter(r -> Boolean.TRUE.equals(r.getIsCorrect())).count();
-            long total = testResponses.size();
+            // Récupérer les réponses liées à ce score
+            List<DeveloppeurResponse> responsesForScore = responseRepository.findByDeveloppeurTestScore(score);
+
+            long correctAnswers = responsesForScore.stream().filter(r -> Boolean.TRUE.equals(r.getIsCorrect())).count();
+            long total = responsesForScore.size();
             long incorrectAnswers = total - correctAnswers;
             double scoreTest = total > 0 ? (correctAnswers * 100.0 / total) : 0.0;
+
+            totalCorrectAnswers += correctAnswers;
+            totalQuestions += total;
 
             testStats.add(new TestStatDTO(
                     test.getId(),
@@ -59,16 +60,15 @@ public class DashboardService {
                     incorrectAnswers,
                     scoreTest
             ));
-
-            totalCorrectAnswers += correctAnswers;
-            totalQuestions += total;
         }
 
         double globalScore = totalQuestions > 0 ? (totalCorrectAnswers * 100.0 / totalQuestions) : 0.0;
 
         DeveloppeurDashboardDTO dashboard = new DeveloppeurDashboardDTO();
-        dashboard.setNomDeveloppeur(dev.getUsername());
-        dashboard.setChefEquipe(dev.getChefDeProjet() != null ? dev.getChefDeProjet().getUsername() : "Aucun chef");
+        dashboard.setNomDeveloppeur(developpeur.getUsername());
+        dashboard.setChefEquipe(developpeur.getChefDeProjet() != null
+                ? developpeur.getChefDeProjet().getUsername()
+                : "Aucun chef");
         dashboard.setScoreGlobal(globalScore);
         dashboard.setTests(testStats);
 

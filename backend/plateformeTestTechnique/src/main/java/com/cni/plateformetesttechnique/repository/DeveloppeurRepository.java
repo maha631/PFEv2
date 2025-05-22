@@ -22,6 +22,7 @@ public interface DeveloppeurRepository extends JpaRepository<Developpeur, Long> 
     List<Developpeur> findByChefDeProjetId(@Param("chefId") Long chefId);
      List<Developpeur> findByChefDeProjetIdIsNull();
      boolean existsByIdAndChefDeProjetIsNotNull(Long id);
+	List<Long> findDeveloppeursBychefDeProjet_id(Long chefDeProjet_id);
 
 
 
