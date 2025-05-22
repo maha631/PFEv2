@@ -1,5 +1,10 @@
 package com.cni.plateformetesttechnique.model;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 public class DeveloppeurTestScore {
@@ -15,6 +20,11 @@ public class DeveloppeurTestScore {
     @ManyToOne
     @JoinColumn(name = "test_id", nullable = false)
     private Test test;
+    private int attemptNumber; // Numéro de la tentative
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+    private LocalDateTime finishedAt;
+
 
     private Double score;  // Score final du développeur pour ce test
 
@@ -49,6 +59,28 @@ public class DeveloppeurTestScore {
     public void setTest(Test test) {
         this.test = test;
     }
+    public int getAttemptNumber() {
+        return attemptNumber;
+    }
+
+    public void setAttemptNumber(int attemptNumber) {
+        this.attemptNumber = attemptNumber;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    public LocalDateTime getFinishedAt() {
+        return finishedAt;
+    }
+
+    public void setFinishedAt(LocalDateTime finishedAt) {
+        this.finishedAt = finishedAt;
+    }
 
     public Double getScore() {
         return score;
@@ -57,14 +89,22 @@ public class DeveloppeurTestScore {
     public void setScore(Double score) {
         this.score = score;
     }
-
+    @Transient // Optionnel si tu veux calculer la durée
+    public Duration getDuree() {
+        if (createdAt != null && finishedAt != null) {
+            return Duration.between(createdAt, finishedAt);
+        }
+        return Duration.ZERO;
+    }
     @Override
     public String toString() {
         return "DeveloppeurTestScore{" +
                 "id=" + id +
                 ", developpeur=" + developpeur +
                 ", test=" + test +
+                ", attemptNumber=" + attemptNumber +
                 ", score=" + score +
                 '}';
     }
+
 }

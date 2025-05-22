@@ -1,6 +1,8 @@
 package com.cni.plateformetesttechnique.controller;
 
 
+import com.cni.plateformetesttechnique.dto.DeveloppeurResultResponse;
+import com.cni.plateformetesttechnique.dto.TestStatsResponse;
 import com.cni.plateformetesttechnique.service.ScoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +13,7 @@ import com.cni.plateformetesttechnique.security.services.UserDetailsImpl;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -21,8 +24,13 @@ public class ScoreController {
     private ScoreService scoreService;
 
     @GetMapping("/{testId}/{developpeurId}")
+<<<<<<< HEAD
     @PreAuthorize("hasRole('DEVELOPPEUR') or hasRole('ADMIN') or hasRole('ROLE_CHEF')")
 
+=======
+    @PreAuthorize("hasRole('DEVELOPPEUR') or hasRole('ADMIN') or hasRole('CHEF')")
+//appeler par le front pour recuperer le score pour le test deja passé
+>>>>>>> 6742670604363261b699a7cbbe83243f84dd841d
     public ResponseEntity<Map<String, Object>> getScoreByDeveolperAndTestId(
             @PathVariable Long testId,
             @PathVariable(required = false) Long developpeurId,
@@ -243,6 +251,19 @@ public ResponseEntity<Map<String, Object>> obtenirScore(
         }
     }
 
+<<<<<<< HEAD
+=======
+    @GetMapping("/stats/{testId}")
+    public TestStatsResponse getStats(@PathVariable Long testId) {
+        return scoreService.getTestStats(testId);
+    }
+    @GetMapping("/test/{testId}")
+    public ResponseEntity<List<DeveloppeurResultResponse>> getResultatsParTest(@PathVariable Long testId) {
+        List<DeveloppeurResultResponse> resultats = scoreService.getResultatsParTest(testId);
+        return ResponseEntity.ok(resultats);
+    }
+    
+>>>>>>> 6742670604363261b699a7cbbe83243f84dd841d
     
     
     

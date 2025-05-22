@@ -83,6 +83,7 @@ public class TestQuestionController {
 
     // Récupérer les questions d'un test - accessible à tous
     @GetMapping("/test/{testId}")
+<<<<<<< HEAD
 //    public ResponseEntity<List<QuestionDTO>> getQuestionsForTest(@PathVariable Long testId) {
 //        try {
 //            // Appeler la méthode du service pour récupérer les questions avec points et ordre
@@ -101,6 +102,10 @@ public class TestQuestionController {
 //        }
 //    }
     public ResponseEntity<List<Question>> getQuestionsForTest( @PathVariable(name = "testId")  Long testId) {
+=======
+
+    public ResponseEntity<List<Question>> getQuestionsForTest(@PathVariable Long testId) {
+>>>>>>> 6742670604363261b699a7cbbe83243f84dd841d
         List<Question> questions = testQuestionService.getQuestionsForTest(testId);
         return ResponseEntity.ok(questions);
     }

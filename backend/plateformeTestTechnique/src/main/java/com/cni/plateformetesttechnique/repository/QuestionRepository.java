@@ -10,8 +10,16 @@ import java.util.Optional;
 
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     Optional<Question> findById(Long id);
+
     List<Question> findByType(TypeQuestion type);
     long countByNiveau(NiveauQuestion niveau);
 
+    Optional<Question> findByEnonce(String enonce);
 
+    List<Question> findByTypeAndNiveauAndIdNotAndTechnologie(
+            TypeQuestion type,
+            NiveauQuestion niveau,
+            Long id,
+            String technologie
+    );
 }

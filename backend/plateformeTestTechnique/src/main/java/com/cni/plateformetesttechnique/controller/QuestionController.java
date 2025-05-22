@@ -88,9 +88,11 @@
 package com.cni.plateformetesttechnique.controller;
 
 import com.cni.plateformetesttechnique.dto.QuestionRequest;
+import com.cni.plateformetesttechnique.dto.RemplacementRequest;
 import com.cni.plateformetesttechnique.model.*;
 import com.cni.plateformetesttechnique.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -105,7 +107,18 @@ public class QuestionController {
 
     @Autowired
     private QuestionService questionService;
+    @PostMapping("/remplacer")
+    public ResponseEntity<Question> remplacerQuestion(
+                                                      @RequestBody RemplacementRequest request) {
+        Question nouvelle = questionService.remplacerQuestion(request);
+        return ResponseEntity.ok(nouvelle);
+    }
 
+    @GetMapping("/id-by-enonce")
+    public ResponseEntity<Long> getQuestionIdByEnonce(@RequestParam String enonce) {
+        Long id = questionService.getQuestionIdByEnonce(enonce);
+        return ResponseEntity.ok(id);
+    }
     // Ajouter une nouvelle question - accessible par ADMIN et ChefProjet uniquement
     // Ajouter une nouvelle question (y compris CodeQuestion)
     @PostMapping("/add")

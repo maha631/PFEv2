@@ -1,6 +1,7 @@
 package com.cni.plateformetesttechnique.service;
 import com.cni.plateformetesttechnique.dto.AnswerOptionRequest;
 import com.cni.plateformetesttechnique.dto.QuestionRequest;
+import com.cni.plateformetesttechnique.dto.RemplacementRequest;
 import com.cni.plateformetesttechnique.model.*;
 import com.cni.plateformetesttechnique.repository.QuestionRepository;
 import com.cni.plateformetesttechnique.repository.TestQuestionRepository;
@@ -10,8 +11,10 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-
+import java.util.List;
+import java.util.Random;
 @Service
 public class QuestionService {
     @Autowired
@@ -20,6 +23,32 @@ public class QuestionService {
     private TestRepository testRepository;
     @Autowired
     private TestQuestionRepository testQuestionRepository;
+    public Long getQuestionIdByEnonce(String enonce) {
+        return questionRepository.findByEnonce(enonce)
+                .map(Question::getId)
+                .orElseThrow(() -> new RuntimeException("Aucune question trouvée avec cet énoncé: " + enonce));
+    }
+
+
+    public Question remplacerQuestion(RemplacementRequest request) {
+        // Récupérer les questions candidates qui correspondent aux critères
+        List<Question> candidates = questionRepository.findByTypeAndNiveauAndIdNotAndTechnologie(
+                request.getType(),
+                request.getNiveau(),
+                request.getId(),
+                request.getTechnologie()
+        );
+
+        // Si aucune question disponible, on lève une exception
+        if (candidates.isEmpty()) {
+            throw new RuntimeException("Aucune question disponible pour le remplacement.");
+        }
+
+        // Sélection aléatoire réelle
+        Random random = new Random();
+        int randomIndex = random.nextInt(candidates.size());
+        return candidates.get(randomIndex);
+    }
 
     public Question ajouterQuestionDepuisDTO(QuestionRequest request) {
         if (request.getType() == TypeQuestion.QCM) {

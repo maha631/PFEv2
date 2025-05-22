@@ -21,10 +21,7 @@ public class Developpeur extends User {
     private List<String> technologies;
 
     private int experience;
-	@OneToMany(mappedBy = "developpeur")
-	@JsonIgnore
 
-	private List<DeveloppeurResponse> developpeurResponses;
 	@OneToMany(mappedBy = "developpeur", cascade = CascadeType.ALL)
 	@JsonIgnore
 
@@ -75,23 +72,23 @@ public class Developpeur extends User {
 	}
 
 	public Developpeur(String specialite, Double score, List<String> technologies, int experience,
-			List<DeveloppeurResponse> developpeurResponses, List<InvitationTest> invitations) {
+			 List<InvitationTest> invitations) {
 		super();
 		this.specialite = specialite;
 		this.score = score;
 		this.technologies = technologies;
 		this.experience = experience;
-		this.developpeurResponses = developpeurResponses;
+//		this.developpeurResponses = developpeurResponses;
 		this.invitations = invitations;
 	}
 
-	public List<DeveloppeurResponse> getDeveloppeurResponses() {
-		return developpeurResponses;
-	}
-
-	public void setDeveloppeurResponses(List<DeveloppeurResponse> developpeurResponses) {
-		this.developpeurResponses = developpeurResponses;
-	}
+//	public List<DeveloppeurResponse> getDeveloppeurResponses() {
+//		return developpeurResponses;
+//	}
+//
+//	public void setDeveloppeurResponses(List<DeveloppeurResponse> developpeurResponses) {
+//		this.developpeurResponses = developpeurResponses;
+//	}
 
 	public List<InvitationTest> getInvitations() {
 		return invitations;

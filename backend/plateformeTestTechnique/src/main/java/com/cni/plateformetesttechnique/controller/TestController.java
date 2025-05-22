@@ -77,7 +77,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tests")
@@ -85,6 +87,21 @@ public class TestController {
 
     @Autowired
     private TestService testService;
+
+
+    @DeleteMapping("/{testId}")
+    public ResponseEntity<Map<String, String>> deleteTest(@PathVariable Long testId) {
+        boolean deleted = testService.deleteTest(testId);
+        Map<String, String> response = new HashMap<>();
+
+        if (deleted) {
+            response.put("message", "Test supprimé avec succès");
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("message", "Le test n'existe pas ou n'est pas en statut Brouillon");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
 
     // Récupérer tous les tests - accessible à tous
     @GetMapping
@@ -121,13 +138,22 @@ public class TestController {
     @PostMapping("/questions")
     public ResponseEntity<?> generateQs(@Valid @RequestBody TestGenerationRequest request) {
         try {
-            // Logic to generate test...
             List<Question> questions = testService.getQuestionsForAutoGeneration(request);
-            return ResponseEntity.ok(questions);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "Questions générées avec succès");
+            response.put("totalQuestions", questions.size());
+            response.put("questions", questions);
+
+            return ResponseEntity.ok(response);
+
         } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", ex.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
         }
     }
+
     // Créer un test - accessible par ADMIN et ChefProjet uniquement
     @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
@@ -156,11 +182,6 @@ public class TestController {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         return testService.getTestsForCurrentUser(userDetails);
     }
-
-//    public ResponseEntity<Test> createTest(@RequestBody Test test) {
-//        Test createdTest = testService.createTest(test);
-//        return ResponseEntity.ok(createdTest);
-//    }
 
     // Mettre à jour un test - accessible par ADMIN et ChefProjet uniquement
     @PutMapping("/{testId}")
@@ -195,10 +216,10 @@ public class TestController {
     }
 
     // Vérifier si un test est complété - accessible à tous
-    @GetMapping("/isCompleted")
-    public boolean isTestCompleted(
-            @RequestParam Long testId,
-            @RequestParam Long developpeurId) {
-        return testService.isTestCompleted(testId, developpeurId);
-    }
+//    @GetMapping("/isCompleted")
+//    public boolean isTestCompleted(
+//            @RequestParam Long testId,
+//            @RequestParam Long developpeurId) {
+//        return testService.isTestCompleted(testId, developpeurId);
+//    }
 }
