@@ -42,14 +42,9 @@ public class User {
 	
 	@Column(unique = true, nullable = true)
 	private String activationToken;
-	
-	
 	@Lob
 	private byte[] image;
 
-
-	
-	
 	public byte[] getImage() {
 		return image;
 	}

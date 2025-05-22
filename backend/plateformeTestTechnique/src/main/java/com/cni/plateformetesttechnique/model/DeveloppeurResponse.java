@@ -1,6 +1,9 @@
 package com.cni.plateformetesttechnique.model;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+
 import java.util.List;
 
 @Entity
@@ -13,13 +16,11 @@ public class DeveloppeurResponse {
     @ManyToOne
     @JoinColumn(name = "test_id", nullable = false)
     @JsonIgnore
-
     private Test test; // Le test auquel le développeur répond
 
     @ManyToOne
     @JoinColumn(name = "question_id", nullable = false)
-    @JsonIgnore
-
+    @JsonIgnoreProperties({"developpeurResponses"})
     private Question question; // La question à laquelle le développeur répond
 
     @ManyToMany
@@ -35,9 +36,18 @@ public class DeveloppeurResponse {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "developpeur_id", nullable = false)
     @JsonIgnore
-    private Developpeur developpeur;
- // Le développeur qui a répondu à la question
+    private Developpeur developpeur; // Le développeur qui a répondu à la question
 
+    private String reponseLibre; // La réponse libre donnée par le développeur (si applicable)
+
+    private Integer note; // La note attribuée par Gemini (de 0 à 10)
+    @Lob
+    private String explication; // Explication donnée par Gemini pour la correction
+    @Lob
+    private String feedback; // Feedback donné par Gemini pour s'améliorer
+    @Lob
+
+    private String reponseCorrecte; // La réponse correcte suggérée par Gemini
 
     // Constructeur par défaut
     public DeveloppeurResponse() {}
@@ -49,6 +59,17 @@ public class DeveloppeurResponse {
         this.selectedAnswerOptions = selectedAnswerOptions;
         this.isCorrect = isCorrect;
         this.developpeur = developpeur;
+    }
+    public DeveloppeurResponse(Test test, Question question, Boolean isCorrect, Developpeur developpeur, String reponseLibre, Integer note, String explication, String feedback, String reponseCorrecte) {
+        this.test = test;
+        this.question = question;
+        this.isCorrect = isCorrect;
+        this.developpeur = developpeur;
+        this.reponseLibre = reponseLibre;
+        this.note = note;
+        this.explication = explication;
+        this.feedback = feedback;
+        this.reponseCorrecte = reponseCorrecte;
     }
 
     // Getters et Setters
@@ -96,7 +117,47 @@ public class DeveloppeurResponse {
         return developpeur;
     }
 
-    public void setDeveloppeur(Developpeur Developpeur) {
+    public void setDeveloppeur(Developpeur developpeur) {
         this.developpeur = developpeur;
+    }
+
+    public String getReponseLibre() {
+        return reponseLibre;
+    }
+
+    public void setReponseLibre(String reponseLibre) {
+        this.reponseLibre = reponseLibre;
+    }
+
+    public Integer getNote() {
+        return note;
+    }
+
+    public void setNote(Integer note) {
+        this.note = note;
+    }
+
+    public String getExplication() {
+        return explication;
+    }
+
+    public void setExplication(String explication) {
+        this.explication = explication;
+    }
+
+    public String getFeedback() {
+        return feedback;
+    }
+
+    public void setFeedback(String feedback) {
+        this.feedback = feedback;
+    }
+
+    public String getReponseCorrecte() {
+        return reponseCorrecte;
+    }
+
+    public void setReponseCorrecte(String reponseCorrecte) {
+        this.reponseCorrecte = reponseCorrecte;
     }
 }

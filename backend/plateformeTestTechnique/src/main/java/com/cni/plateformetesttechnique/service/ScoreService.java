@@ -32,9 +32,7 @@ public class ScoreService {
 
         // Récupérer toutes les questions du test
         List<TestQuestion> testQuestions = testQuestionRepository.findByTestId(testId);
-//        if (responses.size() < testQuestions.size()) {
-//            throw new RuntimeException("Le développeur n'a pas encore complété toutes les questions du test !");
-//        }
+
         // Calculer le total des points du test
         double totalPoints = testQuestions.stream().mapToDouble(TestQuestion::getPoints).sum();
 
@@ -177,6 +175,7 @@ public class ScoreService {
         return avgScore;
     }
 
+
     @Transactional
     protected void updateDeveloppeurGlobalScore(Developpeur developpeur) {
         double globalScore = developpeurTestScoreRepository.findByDeveloppeur(developpeur)
@@ -220,7 +219,4 @@ public class ScoreService {
    }
 
     
-
-
-
 

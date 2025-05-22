@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.cni.plateformetesttechnique.security.services.UserDetailsImpl;
 
 import io.jsonwebtoken.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Component
 public class JwtUtils {
@@ -58,5 +59,26 @@ public class JwtUtils {
         }
 
         return false;
+    }
+
+	
+    public String extractUsernameFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7); // remove "Bearer "
+            return extractUsername(token);
+        }
+
+        return null;
+    }
+
+    public String extractUsername(String token) {
+        Claims claims = Jwts.parser()
+                            .setSigningKey(jwtSecret.getBytes())
+                            .parseClaimsJws(token)
+                            .getBody();
+
+        return claims.getSubject(); // subject = username
     }
 }

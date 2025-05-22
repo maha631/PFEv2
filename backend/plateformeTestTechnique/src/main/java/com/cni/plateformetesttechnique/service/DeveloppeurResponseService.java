@@ -1,13 +1,21 @@
 package com.cni.plateformetesttechnique.service;
-import com.cni.plateformetesttechnique.service.ScoreService;
 
 import com.cni.plateformetesttechnique.model.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import com.cni.plateformetesttechnique.repository.*;
+import okhttp3.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Optional;
+
 
 @Service
 public class DeveloppeurResponseService {
@@ -24,71 +32,125 @@ public class DeveloppeurResponseService {
     private TestQuestionRepository testQuestionRepository;
     @Autowired
     private TestRepository testRepository;
-
+    @Autowired
+    private GeminiService GeminiService;
     @Autowired
     private AnswerOptionRepository answerOptionRepository;
     @Autowired
 
     private ScoreService scoreService;
 
-    public Double enregistrerReponse(Long testId, Long questionId, List<Long> selectedOptionIds, Long developpeurId) {
-        // Récupérer le développeur
+    public Double enregistrerReponse(Long testId, Long questionId, List<Long> selectedOptionIds, Long developpeurId, String reponseLibre) {
+
+        System.out.println(">>> Début de la méthode enregistrerReponse()");
+        System.out.println("testId: " + testId);
+        System.out.println("questionId: " + questionId);
+        System.out.println("developpeurId: " + developpeurId);
+        System.out.println("selectedOptionIds: " + selectedOptionIds);
+        System.out.println("reponseLibre: " + reponseLibre);
+
+        // 1. Récupérer le développeur
         Developpeur developpeur = developpeurRepository.findById(developpeurId)
                 .orElseThrow(() -> new RuntimeException("Développeur non trouvé avec ID: " + developpeurId));
 
-        // Récupérer le test et la question
+        // 2. Récupérer le test et la question
         Test test = testRepository.findById(testId)
                 .orElseThrow(() -> new RuntimeException("Test non trouvé avec ID: " + testId));
+        System.out.println("Test récupéré: " + test.getTitre());
 
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question non trouvée avec ID: " + questionId));
+        System.out.println("Question récupérée: " + question.getEnonce());
+        Optional<TestQuestion> testQuestionOpt = testQuestionRepository.findByTestIdAndQuestionId(testId, questionId);
+        Integer point = testQuestionOpt.map(TestQuestion::getPoints).orElse(0); // valeur par défaut si non trouvé
 
-        // Vérifier que la question appartient bien au test
+        System.out.println(">>> Points de cette question dans ce test: " + point);
+        // 3. Vérifier si la question est bien dans le test
         boolean questionInTest = test.getTestQuestions().stream()
                 .anyMatch(tq -> tq.getQuestion().getId().equals(questionId));
+
+        System.out.println("questionInTest: " + questionInTest);
 
         if (!questionInTest) {
             throw new RuntimeException("Cette question n'appartient pas au test spécifié.");
         }
 
-        // Récupérer les options sélectionnées
-        List<AnswerOption> selectedOptions = answerOptionRepository.findAllByIdIn(selectedOptionIds);
+        // 4. Si question libre (code)
+        if (question.getType() != TypeQuestion.QCM && reponseLibre != null)
+        {
+            System.out.println("Traitement d'une réponse libre (code)");
 
-        // Vérifier que toutes les options sélectionnées appartiennent bien à la question
+            EvaluationResult geminiResponse = GeminiService.evaluateDeveloperResponse(question.getEnonce(), reponseLibre,point).block();
+            System.out.println("Réponse de Gemini: " + geminiResponse);
+
+            DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(test, question, null, true, developpeur);
+            developpeurResponse.setIsCorrect(geminiResponse.getIsCorrecte());
+            developpeurResponse.setReponseLibre(reponseLibre);
+            developpeurResponse.setNote(geminiResponse.getNote());
+            developpeurResponse.setExplication(geminiResponse.getExplication());
+            developpeurResponse.setFeedback(geminiResponse.getFeedback());
+            developpeurResponse.setReponseCorrecte(geminiResponse.getReponseCorrecte());
+            System.out.println("===== DEBUG - DEVELOPPEUR RESPONSE =====");
+            System.out.println("isCorrect      : " + developpeurResponse.getIsCorrect());
+            System.out.println("note           : " + developpeurResponse.getNote());
+            System.out.println("explication    : " + developpeurResponse.getExplication());
+            System.out.println("reponseCorrecte: " + developpeurResponse.getReponseCorrecte());
+            System.out.println("feedback       : " + developpeurResponse.getFeedback());
+            System.out.println("reponseLibre   : " + developpeurResponse.getReponseLibre());
+            System.out.println("========================================");
+
+            developpeurResponseRepository.save(developpeurResponse);
+            System.out.println("Réponse libre sauvegardée.");
+
+            List<DeveloppeurResponse> responses = developpeurResponseRepository.findByTest_IdAndDeveloppeur_Id(testId, developpeurId);
+            System.out.println("Nombre total de réponses du développeur: " + responses.size());
+
+            if (responses.size() == test.getTestQuestions().size()) {
+                System.out.println("Toutes les questions sont répondues. Calcul du score.");
+                return scoreService.calculerScore(testId, developpeurId);
+            }
+
+            return null;
+        }
+
+        // 5. Si question à choix
+        List<AnswerOption> selectedOptions = answerOptionRepository.findAllByIdIn(selectedOptionIds);
+        System.out.println("Options sélectionnées récupérées: " + selectedOptions.size());
+
         boolean allOptionsBelongToQuestion = selectedOptions.stream()
                 .allMatch(option -> option.getQuestion().getId().equals(questionId));
 
+        System.out.println("Toutes les options appartiennent à la question: " + allOptionsBelongToQuestion);
         if (!allOptionsBelongToQuestion) {
             throw new RuntimeException("Certaines options sélectionnées n'appartiennent pas à cette question.");
         }
 
-        // Vérifier si toutes les options sélectionnées sont correctes
         boolean isCorrect = selectedOptions.stream().allMatch(AnswerOption::getIsCorrect);
+        System.out.println("Les options sélectionnées sont toutes correctes ? " + isCorrect);
 
-        // Vérifier si une réponse existe déjà pour ce développeur, test et question
         DeveloppeurResponse existingResponse = developpeurResponseRepository.findByDeveloppeurAndTestAndQuestion(developpeur, test, question);
 
         if (existingResponse != null) {
-            // Mise à jour de la réponse existante
+            System.out.println("Mise à jour d'une réponse existante.");
             existingResponse.setSelectedAnswerOptions(selectedOptions);
             existingResponse.setIsCorrect(isCorrect);
             developpeurResponseRepository.save(existingResponse);
         } else {
-            // Sauvegarde d'une nouvelle réponse
+            System.out.println("Création d'une nouvelle réponse.");
             DeveloppeurResponse developpeurResponse = new DeveloppeurResponse(test, question, selectedOptions, isCorrect, developpeur);
             developpeurResponseRepository.save(developpeurResponse);
         }
 
-        // Vérifier si c'était la dernière question du test
         List<DeveloppeurResponse> responses = developpeurResponseRepository.findByTest_IdAndDeveloppeur_Id(testId, developpeurId);
-        int totalQuestions = test.getTestQuestions().size();
+        System.out.println("Total de réponses après ajout: " + responses.size());
 
-        if (responses.size() == totalQuestions) {
-            // Si toutes les questions ont été répondues, calculer le score
+        if (responses.size() == test.getTestQuestions().size()) {
+            System.out.println("Toutes les questions sont répondues. Calcul du score.");
             return scoreService.calculerScore(testId, developpeurId);
         }
 
-        return null; // Si ce n'était pas la dernière question, ne pas encore calculer le score
+        System.out.println(">>> Fin de la méthode enregistrerReponse()");
+        return null;
     }
 
 

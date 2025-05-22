@@ -43,6 +43,7 @@ public class DeveloppeurController {
 package com.cni.plateformetesttechnique.controller;
 
 import java.io.IOException;
+
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -65,6 +66,10 @@ import com.cni.plateformetesttechnique.repository.UserRepository;
 import com.cni.plateformetesttechnique.response.MessageResponse;
 import com.cni.plateformetesttechnique.security.services.UserDetailsImpl;
 import com.cni.plateformetesttechnique.service.DeveloppeurService;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
 
 @RestController
 @RequestMapping("/api/developpeurs")
@@ -100,13 +105,13 @@ public class DeveloppeurController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Developpeur> getDeveloppeurById(@PathVariable Long id) {
+    public ResponseEntity<Developpeur> getDeveloppeurById(@PathVariable(name = "id") Long id) {
         Developpeur developpeur = developpeurService.getDeveloppeurById(id);
         return ResponseEntity.ok(developpeur);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Developpeur> updateDeveloppeur(@PathVariable Long id, @RequestBody Developpeur profile) {
+    public ResponseEntity<Developpeur> updateDeveloppeur(@PathVariable(name = "id") Long id, @RequestBody Developpeur profile) {
         Developpeur updatedDev = developpeurService.updateDeveloppeur(id, profile);
         return ResponseEntity.ok(updatedDev);
     }
@@ -143,10 +148,10 @@ public class DeveloppeurController {
     }
     
     
-    @PutMapping("developpeur/update/{id}")
+    @PutMapping("/update/{id}")
     @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
     public ResponseEntity<?> updateDeveloppeur(
-            @PathVariable Long id,
+            @PathVariable(name="id") Long id,
             @ModelAttribute UpdateDeveloppeurRequest request,
             Authentication authentication
     ) {
@@ -215,13 +220,13 @@ public class DeveloppeurController {
     }
     
 
-    @PutMapping("developpeur/update-password/{id}")
+    @PutMapping("/update-password/{id}")
     @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
     public ResponseEntity<?> updateDeveloppeurPassword(
             Authentication authentication,
-            @PathVariable Long id,
-            @RequestParam String oldPassword,
-            @RequestParam String newPassword
+            @PathVariable(name="id") Long id,
+            @RequestParam("oldPassword") String oldPassword,
+            @RequestParam("newPassword") String newPassword
     ) {
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         if (!userDetails.getId().equals(id)) {
@@ -247,10 +252,10 @@ public class DeveloppeurController {
     }
 
     
-    @PutMapping("developpeur/update-photo/{id}")
+    @PutMapping("/update-photo/{id}")
     @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
     public ResponseEntity<?> updateDeveloppeurPhoto(
-            @PathVariable Long id,
+            @PathVariable(name="id") Long id,
             @RequestParam("image") MultipartFile image,
             Authentication authentication
     ) {
@@ -278,6 +283,21 @@ public class DeveloppeurController {
         return ResponseEntity.ok(new MessageResponse("Photo mise à jour avec succès."));
     }
 
+
+    @GetMapping("/photo/{id}")
+    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
+    public ResponseEntity<byte[]> getDeveloppeurPhoto(@PathVariable(name="id") Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        if (optionalUser.isEmpty() || optionalUser.get().getImage() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        byte[] imageData = optionalUser.get().getImage();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG); // ou IMAGE_PNG si c’est du PNG
+        return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
+    }
 
     
    

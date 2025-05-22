@@ -14,6 +14,7 @@ public interface TestRepository extends JpaRepository<Test, Long> {
 
     List<Test> findByStatut(String statut); // Récupérer les tests par statut (BROUILLON, PUBLIE)
     List<Test> findByAccesPublicTrueAndStatutAndDateExpirationIsNullOrDateExpirationAfter(String statut, LocalDateTime dateExpiration);
+    List<Test> findByCreateur_IdAndStatut(Long createurId, String statut);
 
     long countByStatut(String statut);
 

@@ -1,5 +1,6 @@
 package com.cni.plateformetesttechnique.controller;
 
+import com.cni.plateformetesttechnique.dto.CodeAnalysisRequest;
 import com.cni.plateformetesttechnique.dto.ReponseDTO;
 import com.cni.plateformetesttechnique.model.DeveloppeurResponse;
 import com.cni.plateformetesttechnique.repository.DeveloppeurResponseRepository;
@@ -8,6 +9,7 @@ import com.cni.plateformetesttechnique.service.DeveloppeurResponseService;
 import com.cni.plateformetesttechnique.repository.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -24,29 +26,25 @@ public class DeveloppeurResponseController {
 
     @Autowired
     private DeveloppeurResponseService developpeurResponseService;
+    @Autowired
+
     private DeveloppeurResponseRepository developpeurResponseRepository;
     @Autowired
     private UserRepository userRepository;
-
-    // Enregistrer une réponse - accessible par DEVELOPPEUR uniquement
-    @PostMapping("/submit")
-    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
+    @PostMapping("/enregistrer")
     public ResponseEntity<Map<String, Object>> enregistrerReponse(@RequestBody ReponseDTO reponseDTO) {
         try {
-            // Récupérer l'utilisateur connecté
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
             Long developpeurId = userDetails.getId(); // ID du développeur connecté
-
-            // Appeler le service avec l'ID du développeur connecté
-            developpeurResponseService.enregistrerReponse(
+            Double score = developpeurResponseService.enregistrerReponse(
                     reponseDTO.getTestId(),
                     reponseDTO.getQuestionId(),
                     reponseDTO.getSelectedOptionIds(),
-                    developpeurId
+                    developpeurId,
+                    reponseDTO.getReponseLibre()
             );
-
-            Map<String, Object> response = new HashMap<>();
+                        Map<String, Object> response = new HashMap<>();
             response.put("status", "success");
             response.put("message", "Réponse enregistrée avec succès.");
             response.put("testId", reponseDTO.getTestId());
@@ -62,7 +60,51 @@ public class DeveloppeurResponseController {
 
             return ResponseEntity.badRequest().body(errorResponse);
         }
+
     }
+    @GetMapping("/review/{testId}/{developpeurId}")
+    public List<DeveloppeurResponse> getReview(
+            @PathVariable Long testId,
+            @PathVariable Long developpeurId
+    ) {
+        return developpeurResponseRepository.findByTestIdAndDeveloppeurId(testId, developpeurId);
+    }
+
+    // Enregistrer une réponse - accessible par DEVELOPPEUR uniquement
+//    @PostMapping("/submit")
+//    @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
+//    public ResponseEntity<Map<String, Object>> enregistrerReponse(@RequestBody ReponseDTO reponseDTO) {
+//        try {
+//            // Récupérer l'utilisateur connecté
+//            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+//            Long developpeurId = userDetails.getId(); // ID du développeur connecté
+//
+//            // Appeler le service avec l'ID du développeur connecté
+//            developpeurResponseService.enregistrerReponse(
+//                    reponseDTO.getTestId(),
+//                    reponseDTO.getQuestionId(),
+//                    reponseDTO.getSelectedOptionIds(),
+//                    developpeurId
+//            );
+//
+//            Map<String, Object> response = new HashMap<>();
+//            response.put("status", "success");
+//            response.put("message", "Réponse enregistrée avec succès.");
+//            response.put("testId", reponseDTO.getTestId());
+//            response.put("questionId", reponseDTO.getQuestionId());
+//            response.put("developpeurId", developpeurId);
+//
+//            return ResponseEntity.ok(response);
+//
+//        } catch (Exception e) {
+//            Map<String, Object> errorResponse = new HashMap<>();
+//            errorResponse.put("status", "error");
+//            errorResponse.put("message", e.getMessage());
+//
+//            return ResponseEntity.badRequest().body(errorResponse);
+//        }
+//    }
     @GetMapping("/mes-reponses/{testId}")
     @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')")
     public ResponseEntity<List<DeveloppeurResponse>> getMesReponses(@PathVariable Long testId) {
@@ -72,7 +114,7 @@ public class DeveloppeurResponseController {
         Long developpeurId = userDetails.getId(); // ID du développeur connecté
 
         // Récupérer les réponses de CE développeur pour CE test
-        List<DeveloppeurResponse> mesReponses = developpeurResponseRepository.findByTest_IdAndDeveloppeur_Id(testId, developpeurId);
+        List<DeveloppeurResponse> mesReponses = developpeurResponseRepository.findByTestIdAndDeveloppeurId(testId, developpeurId);
 
         return ResponseEntity.ok(mesReponses);
     }

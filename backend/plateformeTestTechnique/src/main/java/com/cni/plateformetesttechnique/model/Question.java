@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
+@Inheritance(strategy = InheritanceType.JOINED) // Héritage JOINED : chaque sous-classe a sa propre table
+
 public class Question {
 
 	@Id
@@ -16,12 +18,13 @@ public class Question {
 
 	private String enonce;
 
-	@OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	private List<AnswerOption> answerOptions; // Options de réponse pour la question
+//	@OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//	private List<AnswerOption> answerOptions; // Options de réponse pour la question
 
 	@Enumerated(EnumType.STRING)
 	private NiveauQuestion niveau;
-
+	private String technologie; // ex: Java, Python
+	private int tempsEstime;    // en minutes
 	@OneToMany(mappedBy = "question", cascade = CascadeType.ALL)
 	@JsonIgnore
 
@@ -55,13 +58,13 @@ public class Question {
 		this.enonce = enonce;
 	}
 
-	public List<AnswerOption> getAnswerOptions() {
-		return answerOptions;
-	}
-
-	public void setAnswerOptions(List<AnswerOption> answerOptions) {
-		this.answerOptions = answerOptions;
-	}
+//	public List<AnswerOption> getAnswerOptions() {
+//		return answerOptions;
+//	}
+//
+//	public void setAnswerOptions(List<AnswerOption> answerOptions) {
+//		this.answerOptions = answerOptions;
+//	}
 
 	public NiveauQuestion getNiveau() {
 		return niveau;
@@ -70,7 +73,21 @@ public class Question {
 	public void setNiveau(NiveauQuestion niveau) {
 		this.niveau = niveau;
 	}
+	public String getTechnologie() {
+		return technologie;
+	}
 
+	public void setTechnologie(String technologie) {
+		this.technologie = technologie;
+	}
+
+	public int getTempsEstime() {
+		return tempsEstime;
+	}
+
+	public void setTempsEstime(int tempsEstime) {
+		this.tempsEstime = tempsEstime;
+	}
 	public List<TestQuestion> getTestQuestions() {
 		return testQuestions;
 	}
