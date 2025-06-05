@@ -1,6 +1,7 @@
 package com.cni.plateformetesttechnique.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -43,6 +44,8 @@ public class Test {
 
     @ManyToOne
     @JoinColumn(name = "createur_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+
     private User createur;
 
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)

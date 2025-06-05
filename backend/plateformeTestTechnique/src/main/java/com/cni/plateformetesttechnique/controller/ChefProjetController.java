@@ -114,8 +114,8 @@ public class ChefProjetController {
     @PostMapping("/{chefId}/assign/{devId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> assignerDeveloppeur(
-            @PathVariable("chefId") Long chefId,
-            @PathVariable("devId") Long devId) {
+            @PathVariable(name="chefId") Long chefId,
+            @PathVariable(name="devId") Long devId) {
 
         // Appel au service qui fait l'assignation + recalcul
         ChefDeProjet chef = chefDeProjetService.assignerDeveloppeur(chefId, devId);

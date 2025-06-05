@@ -166,7 +166,7 @@ public class DeveloppeurResponseController {
 
     @GetMapping("/mes-reponses/{testId}")
     @PreAuthorize("hasRole('ROLE_DEVELOPPEUR')or hasRole('ADMIN') or hasRole('CHEF')")
-    public ResponseEntity<List<DeveloppeurResponse>> getMesReponses(@PathVariable Long testId) {
+    public ResponseEntity<List<DeveloppeurResponse>> getMesReponses(@PathVariable (name="testId") Long testId) {
         // 🔐 Récupérer l'utilisateur connecté
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();

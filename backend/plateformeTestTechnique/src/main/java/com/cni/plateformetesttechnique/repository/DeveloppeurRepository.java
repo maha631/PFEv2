@@ -24,6 +24,8 @@ public interface DeveloppeurRepository extends JpaRepository<Developpeur, Long> 
      boolean existsByIdAndChefDeProjetIsNotNull(Long id);
 	List<Long> findDeveloppeursBychefDeProjet_id(Long chefDeProjet_id);
 
+    @Query("SELECT d.id FROM Developpeur d WHERE d.chefDeProjet.id = :chefId")
+    List<Long> findDeveloppeursIdsByChefDeProjetId(@Param("chefId") Long chefId);
 
 
 

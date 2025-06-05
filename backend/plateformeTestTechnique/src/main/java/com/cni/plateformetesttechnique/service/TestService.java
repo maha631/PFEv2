@@ -308,16 +308,46 @@ public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest reques
         return testRepository.findByCreateur_IdAndStatut(adminId, "PUBLIE");
     }
     public List<Test> getTestsPubliesDuChefDuDev(String emailDev) {
+        System.out.println(">>> Début de la méthode getTestsPubliesDuChefDuDev");
+        System.out.println("Email du développeur : " + emailDev);
+
         Developpeur developpeur = developpeurRepository.findByEmail(emailDev)
-                .orElseThrow(() -> new RuntimeException("Développeur introuvable"));
+                .orElseThrow(() -> {
+                    System.out.println("!!! Développeur introuvable pour l'email : " + emailDev);
+                    return new RuntimeException("Développeur introuvable");
+                });
+
+        System.out.println("Développeur trouvé : " + developpeur.getUsername() + " (id=" + developpeur.getId() + ")");
 
         ChefDeProjet chef = developpeur.getChefDeProjet();
         if (chef == null) {
-            return new ArrayList<>(); // ou une exception si c'est obligatoire
+            System.out.println("!!! Aucun chef de projet associé au développeur.");
+            return new ArrayList<>();
         }
 
-        return testRepository.findByCreateur_IdAndStatut(chef.getId(), "PUBLIE");
+        System.out.println("Chef de projet trouvé : " + chef.getUsername() + " (id=" + chef.getId() + ")");
+
+        List<Test> tests = testRepository.findByCreateur_IdAndStatut(chef.getId(), "PUBLIE");
+        System.out.println("Nombre de tests publiés trouvés : " + tests.size());
+
+        for (Test test : tests) {
+            System.out.println(" - Test : " + test.getTitre() + " (id=" + test.getId() + ")");
+        }
+
+        return tests;
     }
+
+    //    public List<Test> getTestsPubliesDuChefDuDev(String emailDev) {
+//        Developpeur developpeur = developpeurRepository.findByEmail(emailDev)
+//                .orElseThrow(() -> new RuntimeException("Développeur introuvable"));
+//
+//        ChefDeProjet chef = developpeur.getChefDeProjet();
+//        if (chef == null) {
+//            return new ArrayList<>(); // ou une exception si c'est obligatoire
+//        }
+//
+//        return testRepository.findByCreateur_IdAndStatut(chef.getId(), "PUBLIE");
+//    }
     public boolean deleteTest(Long testId) {
         Optional<Test> testOpt = testRepository.findById(testId);
         if (testOpt.isPresent()) {

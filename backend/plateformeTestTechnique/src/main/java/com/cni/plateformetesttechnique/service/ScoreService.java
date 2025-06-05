@@ -183,17 +183,40 @@ public class ScoreService {
     }
     
     
+//    public Double calculerScoreChef(Long chefDeProjet_id) {
+//        // Récupérer tous les développeurs sous la responsabilité du chef
+//        List<Long> developpeurs = developpeurRepository.findDeveloppeursBychefDeProjet_id(chefDeProjet_id);
+//
+//        if (developpeurs.isEmpty()) {
+//            return 0.0; // Aucun développeur, donc score de 0
+//        }
+//
+//        // Calculer la moyenne des scores de ses développeurs
+//        double totalScore = developpeurs.stream()
+//                .mapToDouble(developpeurId -> getGlobalScore(developpeurId))
+//                .average()
+//                .orElse(0.0);
+//
+//        return totalScore;
+//    }
+
     public Double calculerScoreChef(Long chefDeProjet_id) {
         // Récupérer tous les développeurs sous la responsabilité du chef
-        List<Long> developpeurs = developpeurRepository.findDeveloppeursBychefDeProjet_id(chefDeProjet_id);
+        List<Long> developpeurs = developpeurRepository.findDeveloppeursIdsByChefDeProjetId(chefDeProjet_id);
 
         if (developpeurs.isEmpty()) {
             return 0.0; // Aucun développeur, donc score de 0
         }
-
         // Calculer la moyenne des scores de ses développeurs
+//        double totalScore = developpeurs.stream()
+//                .mapToDouble(developpeurId -> getGlobalScore(developpeurId))
+//                .average()
+//                .orElse(0.0);
         double totalScore = developpeurs.stream()
-                .mapToDouble(developpeurId -> getGlobalScore(developpeurId))
+                .mapToDouble(developpeurId -> {
+                    Double score = getGlobalScore(developpeurId);
+                    return (score != null) ? score : 0.0;
+                })
                 .average()
                 .orElse(0.0);
 
