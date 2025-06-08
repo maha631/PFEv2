@@ -108,7 +108,14 @@ public class DeveloppeurResponseService {
         // ✅ Vérification s'il a déjà répondu à cette question
         boolean alreadyAnswered = developpeurResponseRepository.existsByDeveloppeurTestScore_IdAndQuestion_Id(developpeurTestScore.getId(), questionId);
         if (alreadyAnswered) {
-            throw new RuntimeException("Vous avez déjà répondu à cette question.");
+
+            // ✅ Supprimer la réponse précédente si elle existe
+            Optional<DeveloppeurResponse> ancienneReponseOpt = developpeurResponseRepository
+                    .findByDeveloppeurTestScore_IdAndQuestion_Id(developpeurTestScore.getId(), questionId);
+
+            ancienneReponseOpt.ifPresent(ancienneReponse -> developpeurResponseRepository.delete(ancienneReponse));
+
+//            throw new RuntimeException("Vous avez déjà répondu à cette question.");
         }
 
         // ✅ Enregistrement de la réponse

@@ -88,7 +88,37 @@ public class TestController {
     @Autowired
     private TestService testService;
 
+//    @GetMapping("/suggestions")
+//    public ResponseEntity<List<Test>> getSuggestionsPourDev(
+//            @RequestParam String email,
+//            @RequestParam String technologie,
+//            @RequestParam String niveau) {
+//        List<Test> suggestions = testService.getTestsSuggeresPourDeveloppeur(email, technologie, niveau);
+//        return ResponseEntity.ok(suggestions);
+//    }
+@PostMapping("/suggestions")
+public ResponseEntity<List<Test>> getTestsSuggeres(@RequestBody Map<String, Object> payload) {
+    try {
+        String emailDev = (String) payload.get("emailDev");
+        String technologie = (String) payload.get("technologie");
+        String niveauDifficulte = (String) payload.get("niveauDifficulte");
+        Boolean isNext = (Boolean) payload.get("isNext");
 
+        if (emailDev == null || technologie == null || niveauDifficulte == null || isNext == null) {
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        List<Test> testsSuggeres = testService.getTestsSuggeresPourDeveloppeur(
+                emailDev,
+                technologie,
+                niveauDifficulte,
+                isNext
+        );
+        return ResponseEntity.ok(testsSuggeres);
+    } catch (Exception e) {
+        return ResponseEntity.badRequest().body(null);
+    }
+}
     @DeleteMapping("/{testId}")
     public ResponseEntity<Map<String, String>> deleteTest(@PathVariable Long testId) {
         boolean deleted = testService.deleteTest(testId);

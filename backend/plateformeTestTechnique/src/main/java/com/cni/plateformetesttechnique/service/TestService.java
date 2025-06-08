@@ -361,4 +361,115 @@ public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest reques
         return false; // ← Ajout du return manquant
 
     }
+    public List<Test> getTestsSuggeresPourDeveloppeur(String emailDev, String technologie, String niveauDifficulte, boolean isNext) {
+        System.out.println("Début de getTestsSuggeresPourDeveloppeur");
+        System.out.println("emailDev = " + emailDev);
+        System.out.println("technologie = " + technologie);
+        System.out.println("niveauDifficulte = " + niveauDifficulte);
+        System.out.println("isNext = " + isNext);
+
+        List<Test> suggestions = new ArrayList<>();
+
+        // 1. Récupérer le développeur
+        Developpeur developpeur = developpeurRepository.findByEmail(emailDev)
+                .orElseThrow(() -> {
+                    System.out.println("Développeur introuvable pour email : " + emailDev);
+                    return new RuntimeException("Développeur introuvable");
+                });
+        System.out.println("Développeur trouvé : " + developpeur.getEmail());
+
+        ChefDeProjet chef = developpeur.getChefDeProjet();
+        if (chef == null) {
+            System.out.println("Aucun chef de projet associé au développeur");
+            throw new RuntimeException("Aucun chef de projet associé au développeur.");
+        }
+        System.out.println("Chef de projet id : " + chef.getId());
+
+        Long chefId = chef.getId();
+        Long adminId = 6L;
+
+        // 2. Définir les niveaux dans l’ordre croissant (en respectant la casse)
+        List<String> niveaux = List.of("Facile", "Intermédiaire", "Difficile");
+        int currentIndex = niveaux.indexOf(niveauDifficulte);
+        System.out.println("Index niveau actuel = " + currentIndex);
+
+        if (currentIndex == -1) {
+            System.out.println("Niveau actuel invalide : " + niveauDifficulte);
+            throw new RuntimeException("Niveau actuel invalide : " + niveauDifficulte);
+        }
+
+        // 3. Chercher tous les tests PUBLIE créés par le chef ou l’admin
+        List<Test> tousTests = testRepository.findTestsPubliesByCreateurIds(List.of(chefId, adminId));
+        System.out.println("Nombre de tests publiés trouvés : " + tousTests.size());
+
+        // 4. Filtrer par technologie et niveau selon isNext
+        for (Test test : tousTests) {
+            System.out.println("Test id=" + test.getId() + " niveau=" + test.getNiveauDifficulte() + " technologies=" + test.getTechnologies());
+            if (test.getTechnologies().contains(technologie)) {
+                int testNiveauIndex = niveaux.indexOf(test.getNiveauDifficulte());
+                if (testNiveauIndex == -1) {
+                    System.out.println("Test ignoré niveau invalide : " + test.getNiveauDifficulte());
+                    continue; // Ignorer tests avec niveau invalide
+                }
+
+                if (isNext) {
+                    if (testNiveauIndex >= currentIndex) {
+                        System.out.println("Ajout test (isNext=true) id=" + test.getId());
+                        suggestions.add(test);
+                    }
+                } else {
+                    if (testNiveauIndex == currentIndex) {
+                        System.out.println("Ajout test (isNext=false) id=" + test.getId());
+                        suggestions.add(test);
+                    }
+                }
+            } else {
+                System.out.println("Test ignoré technologie non correspondante");
+            }
+        }
+
+        System.out.println("Nombre de tests suggérés : " + suggestions.size());
+        return suggestions;
+    }
+
+
+//    public List<Test> getTestsSuggeresPourDeveloppeur(String emailDev, String technologie, String niveauActuel) {
+//        List<Test> suggestions = new ArrayList<>();
+//
+//        // 1. Récupérer le développeur
+//        Developpeur developpeur = developpeurRepository.findByEmail(emailDev)
+//                .orElseThrow(() -> new RuntimeException("Développeur introuvable"));
+//
+//        ChefDeProjet chef = developpeur.getChefDeProjet();
+//        if (chef == null) {
+//            throw new RuntimeException("Aucun chef de projet associé au développeur.");
+//        }
+//
+//        Long chefId = chef.getId();
+//        Long adminId = 6L;
+//
+//        // 2. Définir les niveaux dans l’ordre croissant
+//        List<String> niveaux = List.of("debutant", "intermediaire", "difficile");
+//        int currentIndex = niveaux.indexOf(niveauActuel.toLowerCase());
+//
+//        if (currentIndex == -1) {
+//            throw new RuntimeException("Niveau actuel invalide : " + niveauActuel);
+//        }
+//
+//        // 3. Chercher tous les tests PUBLIE créés par le chef ou l’admin
+//        List<Test> tousTests = testRepository.findTestsPubliesByCreateurIds(List.of(chefId, adminId));
+//
+//        // 4. Filtrer par technologie et niveau >= niveau actuel
+//        for (Test test : tousTests) {
+//            if (
+//                    test.getTechnologies().contains(technologie)
+//                            && niveaux.indexOf(test.getNiveauDifficulte().toLowerCase()) >= currentIndex
+//            ) {
+//                suggestions.add(test);
+//            }
+//        }
+//
+//        return suggestions;
+//    }
+
 }

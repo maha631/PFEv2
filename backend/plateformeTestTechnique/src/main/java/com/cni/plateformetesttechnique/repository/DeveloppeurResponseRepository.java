@@ -16,6 +16,7 @@ public interface DeveloppeurResponseRepository extends JpaRepository<Developpeur
     long countByDeveloppeurTestScore_Id(Long developpeurTestScoreId);
     List<DeveloppeurResponse> findByDeveloppeurTestScore_Id(Long developpeurTestScoreId);
     boolean existsByDeveloppeurTestScore_IdAndQuestion_Id(Long developpeurTestScoreId, Long questionId);
+    Optional<DeveloppeurResponse> findByDeveloppeurTestScore_IdAndQuestion_Id(Long developpeurTestScoreId, Long questionId);
 
     DeveloppeurResponse findByDeveloppeurTestScoreAndQuestion(DeveloppeurTestScore developpeurTestScore, Question question);
 
