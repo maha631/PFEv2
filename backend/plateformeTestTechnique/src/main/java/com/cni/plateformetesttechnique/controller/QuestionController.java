@@ -147,14 +147,14 @@ public class QuestionController {
 
     // Mettre à jour une question existante
     @PutMapping("/update/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public Question updateQuestion(@PathVariable Long id, @RequestBody Question questionUpdated) {
         return questionService.updateQuestion(id, questionUpdated);
     }
 
     // Supprimer une question par son ID
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
+//    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
     public void deleteQuestion(@PathVariable(name = "id") Long id) {
         questionService.deleteQuestion(id);
     }
