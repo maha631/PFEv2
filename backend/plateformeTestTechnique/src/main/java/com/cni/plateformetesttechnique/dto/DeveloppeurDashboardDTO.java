@@ -2,12 +2,15 @@ package com.cni.plateformetesttechnique.dto;
 
 import java.util.List;
 
+import com.cni.plateformetesttechnique.model.Certification;
+
 public class DeveloppeurDashboardDTO {
 
     private String nomDeveloppeur;
     private String chefEquipe;
     private double scoreGlobal;
     private List<TestStatDTO> tests;
+    private List<Certification> certifications;
 
     public String getNomDeveloppeur() {
         return nomDeveloppeur;
@@ -33,13 +36,21 @@ public class DeveloppeurDashboardDTO {
         this.scoreGlobal = scoreGlobal;
     }
 
-	public List<TestStatDTO> getTests() {
-		return tests;
-	}
+    public List<TestStatDTO> getTests() {
+        return tests;
+    }
 
-	public void setTests(List<TestStatDTO> tests) {
-		this.tests = tests;
-	}
+    public void setTests(List<TestStatDTO> tests) {
+        this.tests = tests;
+    }
 
-    
+    public List<Certification> getCertifications() {
+        return certifications;
+    }
+
+    public void setCertifications(List<Certification> certifications) {
+        this.certifications = certifications;
+    }
+
+
 }

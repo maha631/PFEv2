@@ -7,5 +7,6 @@ public record TestStatDTO(
         long totalQuestions,
         long correctAnswers,
         long incorrectAnswers,
-        double scoreTest
+        String niveauDifficulte,
+        double score
 ) {}

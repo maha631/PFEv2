@@ -361,6 +361,8 @@ public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest reques
         return false; // ← Ajout du return manquant
 
     }
+
+
     public List<Test> getTestsSuggeresPourDeveloppeur(String emailDev, String technologie, String niveauDifficulte, boolean isNext) {
         System.out.println("Début de getTestsSuggeresPourDeveloppeur");
         System.out.println("emailDev = " + emailDev);
@@ -471,5 +473,10 @@ public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest reques
 //
 //        return suggestions;
 //    }
+
+    public long getTestCountByNiveau(String niveau) {
+        return testRepository.countByNiveauDifficulte(niveau.toUpperCase().trim());
+    }
+
 
 }

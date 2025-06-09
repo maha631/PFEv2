@@ -170,7 +170,7 @@ public class ChefProjetController {
         return ResponseEntity.ok(exists);
     }
     @GetMapping("/{id}/developpeurs")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ROLE_CHEF')")
 
     public ResponseEntity<List<Developpeur>> getDeveloppeursParChef(@PathVariable(name = "id")  Long id) {
         List<Developpeur> developpeurs = chefDeProjetService.getDeveloppeursParChef(id);

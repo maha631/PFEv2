@@ -96,6 +96,11 @@ public class TestController {
 //        List<Test> suggestions = testService.getTestsSuggeresPourDeveloppeur(email, technologie, niveau);
 //        return ResponseEntity.ok(suggestions);
 //    }
+
+    @GetMapping("/count/niveau/{niveau}")
+    public long getTestCountByNiveau(@PathVariable(name="niveau") String niveau) {
+        return testService.getTestCountByNiveau(niveau);
+    }
 @PostMapping("/suggestions")
 public ResponseEntity<List<Test>> getTestsSuggeres(@RequestBody Map<String, Object> payload) {
     try {
