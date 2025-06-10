@@ -144,7 +144,7 @@ public class CertificationService {
 
             // === HEADER ===
             try {
-                URL logoUrl = Objects.requireNonNull(getClass().getClassLoader().getResource("static/logo.png"), "Logo non trouvé");
+                URL logoUrl = Objects.requireNonNull(getClass().getClassLoader().getResource("static/logo.png.jpeg"), "Logo non trouvé");
                 Image logo = Image.getInstance(logoUrl);
                 logo.scaleToFit(80, 80);
                 logo.setAlignment(Image.ALIGN_LEFT);

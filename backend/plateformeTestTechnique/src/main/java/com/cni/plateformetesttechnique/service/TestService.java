@@ -475,7 +475,9 @@ public List<Question> getQuestionsForAutoGeneration(TestGenerationRequest reques
 //    }
 
     public long getTestCountByNiveau(String niveau) {
-        return testRepository.countByNiveauDifficulte(niveau.toUpperCase().trim());
+        return testRepository.countByNiveauDifficulteIgnoreCaseAndStatut(niveau.toUpperCase().trim(), "PUBLIE");
+
+//        return testRepository.countByNiveauDifficulte(niveau.toUpperCase().trim());
     }
 
 

@@ -23,7 +23,8 @@ public interface TestRepository extends JpaRepository<Test, Long> {
     @Query("SELECT t FROM Test t WHERE t.createur.id IN :createurIds AND t.statut = 'PUBLIE'")
     List<Test> findTestsPubliesByCreateurIds(@Param("createurIds") List<Long> createurIds);
     List<Test> findByNiveauDifficulte(String niveauDifficulte);
-    long countByNiveauDifficulte(String niveauDifficulte);
+//    long countByNiveauDifficulte(String niveauDifficulte);
+    long countByNiveauDifficulteIgnoreCaseAndStatut(String niveauDifficulte, String statut);
 
     }
 
